@@ -1,0 +1,77 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-03-23 20:00:11.166943",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "number_of_messages",
+  "number_of_tokens",
+  "success_tokens",
+  "failed_tokens"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "number_of_messages",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Number of messages",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "number_of_tokens",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Number of tokens",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "success_tokens",
+   "fieldtype": "Int",
+   "label": "Success tokens",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "failed_tokens",
+   "fieldtype": "Int",
+   "label": "Failed tokens",
+   "non_negative": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-03-23 20:01:23.430705",
+ "modified_by": "Administrator",
+ "module": "Raven Cloud",
+ "name": "RC Push Notification Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

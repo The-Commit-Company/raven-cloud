@@ -1,0 +1,62 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-03-23 17:33:06.696450",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "firebase_admin_credential",
+  "vapid_public_key",
+  "firebase_project_id",
+  "firebase_client_configuration"
+ ],
+ "fields": [
+  {
+   "fieldname": "firebase_admin_credential",
+   "fieldtype": "Long Text",
+   "in_list_view": 1,
+   "label": "Firebase Admin Credential",
+   "reqd": 1
+  },
+  {
+   "fieldname": "vapid_public_key",
+   "fieldtype": "Data",
+   "label": "VAPID Public Key",
+   "length": 300
+  },
+  {
+   "fieldname": "firebase_client_configuration",
+   "fieldtype": "Small Text",
+   "label": "Firebase Client Configuration"
+  },
+  {
+   "fieldname": "firebase_project_id",
+   "fieldtype": "Data",
+   "label": "Firebase Project ID"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-03-23 17:50:40.920837",
+ "modified_by": "Administrator",
+ "module": "Raven Cloud",
+ "name": "RC FCM Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
