@@ -39,7 +39,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-23 17:50:40.920837",
+ "modified": "2025-04-18 12:34:16.314050",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
  "name": "RC FCM Settings",
@@ -54,8 +54,20 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "if_owner": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Raven Cloud User",
+   "share": 1,
+   "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
