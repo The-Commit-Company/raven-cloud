@@ -7,7 +7,7 @@
  "field_order": [
   "user",
   "column_break_kjgq",
-  "site_url",
+  "site",
   "section_break_ixta",
   "error_traceback"
  ],
@@ -21,11 +21,6 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "site_url",
-   "fieldtype": "Data",
-   "label": "Site URL"
-  },
-  {
    "fieldname": "user",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -37,12 +32,19 @@
    "fieldname": "error_traceback",
    "fieldtype": "Long Text",
    "label": "Error TraceBack"
+  },
+  {
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Site URL",
+   "options": "RC User Site"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-25 18:41:58.877280",
+ "modified": "2025-04-25 18:53:11.232523",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
  "name": "RC Push Notification Error Log",
