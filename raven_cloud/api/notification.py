@@ -1,8 +1,29 @@
 import frappe
+from frappe.utils.response import Response
 import firebase_admin
 from firebase_admin import messaging
 import json
 from raven_cloud.utils.fcm import get_app
+
+@frappe.whitelist()
+def register_site():
+    frappe.only_for(["Raven Cloud User", "System Manager"])
+
+    site_url = frappe.request.host
+
+    # Check if the site is already registered
+    if not frappe.db.exists("RC User Site", {"site": site_url}):
+        frappe.get_doc({
+            "doctype": "RC User Site",
+            "site": site_url,
+        }).insert()
+
+    fcm_settings = frappe.get_doc("RC FCM Settings")
+
+    return {
+		"config": fcm_settings.firebase_client_configuration,
+		"vapid_public_key": fcm_settings.vapid_public_key,
+	}
 
 @frappe.whitelist()
 def send(messages):
