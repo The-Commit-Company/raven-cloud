@@ -17,7 +17,7 @@ class RCInvalidTokens(Document):
 		from frappe.types import DF
 
 		invalid_token: DF.Text
-		site_url: DF.Data
+		site: DF.Link
 	# ruff: noqa
 	# end: auto-generated types
 
