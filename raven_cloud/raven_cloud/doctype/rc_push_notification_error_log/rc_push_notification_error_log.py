@@ -16,6 +16,7 @@ class RCPushNotificationErrorLog(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		error_response: DF.LongText | None
 		error_traceback: DF.LongText | None
 		site: DF.Link | None
 		user: DF.Link
