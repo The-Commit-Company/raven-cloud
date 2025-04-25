@@ -1,41 +1,31 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2025-04-12 12:06:27.056159",
+ "autoname": "field:site",
+ "creation": "2025-04-25 18:36:52.523659",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "site",
-  "column_break_ewuy",
-  "invalid_token"
+  "site"
  ],
  "fields": [
   {
-   "fieldname": "column_break_ewuy",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "invalid_token",
-   "fieldtype": "Text",
-   "label": "Invalid Token",
-   "reqd": 1
-  },
-  {
    "fieldname": "site",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Site",
-   "options": "RC User Site",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-25 18:48:39.005764",
+ "modified": "2025-04-25 18:39:26.940181",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
- "name": "RC Invalid Tokens",
+ "name": "RC User Site",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
