@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "user",
+  "site",
   "number_of_messages",
   "number_of_tokens",
   "success_tokens",
@@ -39,20 +40,29 @@
   {
    "fieldname": "success_tokens",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Success tokens",
    "non_negative": 1
   },
   {
    "fieldname": "failed_tokens",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Failed tokens",
    "non_negative": 1
+  },
+  {
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "label": "Site",
+   "options": "RC User Site",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-18 12:34:50.467648",
+ "modified": "2025-04-25 18:45:38.587029",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
  "name": "RC Push Notification Log",

@@ -5,7 +5,7 @@
 from frappe.model.document import Document
 
 
-class RCPushNotificationLog(Document):
+class RCPushNotificationErrorLog(Document):
 	# begin: auto-generated types
 	# ruff: noqa
 
@@ -16,11 +16,9 @@ class RCPushNotificationLog(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		failed_tokens: DF.Int
-		number_of_messages: DF.Int
-		number_of_tokens: DF.Int
-		site: DF.Link
-		success_tokens: DF.Int
+		error_response: DF.LongText | None
+		error_traceback: DF.LongText | None
+		site: DF.Link | None
 		user: DF.Link
 	# ruff: noqa
 	# end: auto-generated types
