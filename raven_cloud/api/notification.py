@@ -124,7 +124,7 @@ def _send(messages, site_url: str):
         for token in failed_tokens:
             frappe.get_doc({
                 "doctype": "RC Invalid Tokens",
-                "site_url": site_url,
+                "site": site_url,
                 "invalid_token": token,
             }).insert()
     else:
@@ -134,6 +134,7 @@ def _send(messages, site_url: str):
     frappe.get_doc({
         "doctype": "RC Push Notification Log",
         "user": frappe.session.user,
+        "site": site_url,
         "number_of_messages": len(messages),
         "number_of_tokens": len(all_tokens),
         "success_tokens": len(success_tokens),
