@@ -39,12 +39,14 @@
   {
    "fieldname": "success_tokens",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Success tokens",
    "non_negative": 1
   },
   {
    "fieldname": "failed_tokens",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Failed tokens",
    "non_negative": 1
   }
@@ -52,7 +54,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-18 12:34:50.467648",
+ "modified": "2025-04-25 13:52:13.042669",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
  "name": "RC Push Notification Log",
