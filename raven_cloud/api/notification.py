@@ -3,7 +3,6 @@ import firebase_admin
 from firebase_admin import messaging
 import json
 from raven_cloud.utils.fcm import get_app
-from urllib.parse import urlparse
 
 @frappe.whitelist()
 def send(messages):
@@ -12,24 +11,16 @@ def send(messages):
     Before enqueuing the job, it checks if the user has the necessary permissions to send notifications.
     """
 
-    def _site_name(site_url: str) -> str:
-        return urlparse(site_url).hostname
-
-    user_roles = frappe.get_roles(frappe.session.user)
-
-    if not ("System Manager" in user_roles or "Raven Cloud User" in user_roles):
-        frappe.throw("You are not authorized to send notifications", frappe.PermissionError)
+    frappe.only_for(["Raven Cloud User", "System Manager"])
 
     if isinstance(messages, str):
         messages = json.loads(messages)
-
-    site_url = _site_name(frappe.utils.get_url())
 
     # Enqueue the job of sending notifications
     frappe.enqueue(
         _send,
         messages=messages,
-        site_url=site_url,
+        site_url=frappe.request.host,
         queue="short",
     )
 
@@ -71,11 +62,12 @@ def _send(messages, site_url: str):
             )
 
             if message.get("click_action"):
-                webpush = messaging.WebpushConfig(
-                    fcm_options=messaging.WebpushFcmOptions(
-                        link=message["notification"]["click_action"],
-                    ),
-                )
+                if message.get("click_action").startswith("https://"):
+                    webpush = messaging.WebpushConfig(
+                        fcm_options=messaging.WebpushFCMOptions(
+                            link=message.get("click_action", None),
+                        ),
+                    )
             
             if message.get("tag") or message.get("image"):
                 android = messaging.AndroidConfig(
