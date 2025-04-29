@@ -34,6 +34,10 @@ def send(messages):
 
     frappe.only_for(["Raven Cloud User", "System Manager"])
 
+    # check if the site exists in RC User Site
+    if not frappe.db.exists("RC User Site", frappe.request.host):
+        frappe.throw("Site not created for the user")
+
     if isinstance(messages, str):
         messages = json.loads(messages)
 
