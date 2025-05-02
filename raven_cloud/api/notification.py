@@ -32,23 +32,20 @@ def send(messages, site_name: str):
 
     frappe.only_for("Raven Cloud User")
 
-    try:
-        # check if the site exists in RC User Site
-        if not frappe.db.exists("RC User Site", site_name):
-            frappe.throw("Site not created for the user")
+    # check if the site exists in RC User Site
+    if not frappe.db.exists("RC User Site", site_name):
+        frappe.throw("Site not created for the user")
 
-        if isinstance(messages, str):
-            messages = json.loads(messages)
+    if isinstance(messages, str):
+        messages = json.loads(messages)
 
-        # Enqueue the job of sending notifications
-        frappe.enqueue(
-            _send,
-            messages=messages,
-            site_url=site_name,
-            queue="short",
-        )
-    except Exception as e:
-        frappe.log_error(title="Error in Send API")
+    # Enqueue the job of sending notifications
+    frappe.enqueue(
+        _send,
+        messages=messages,
+        site_url=site_name,
+        queue="short",
+    )
 
     # TODO: Return the response from api itself.
     return
