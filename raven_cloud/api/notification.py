@@ -7,7 +7,7 @@ from raven_cloud.utils.fcm import get_app
 
 @frappe.whitelist()
 def register_site(site_name: str):
-    frappe.only_for(["Raven Cloud User", "System Manager"])
+    frappe.only_for("Raven Cloud User")
 
     # Check if the site is already registered
     if not frappe.db.exists("RC User Site", {"site": site_name}):
@@ -30,7 +30,7 @@ def send(messages, site_name: str):
     Before enqueuing the job, it checks if the user has the necessary permissions to send notifications.
     """
 
-    frappe.only_for(["Raven Cloud User", "System Manager"])
+    frappe.only_for("Raven Cloud User")
 
     # check if the site exists in RC User Site
     if not frappe.db.exists("RC User Site", frappe.request.host):
