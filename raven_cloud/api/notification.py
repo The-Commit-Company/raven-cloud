@@ -33,7 +33,7 @@ def send(messages, site_name: str):
     frappe.only_for("Raven Cloud User")
 
     # check if the site exists in RC User Site
-    if not frappe.db.exists("RC User Site", frappe.request.host):
+    if not frappe.db.exists("RC User Site", site_name):
         frappe.throw("Site not created for the user")
 
     if isinstance(messages, str):
