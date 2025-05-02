@@ -11,14 +11,18 @@
     "copy-html-entry": "cp ../raven_cloud/public/dashboard/index.html ../raven_cloud/www/dashboard.html"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.11",
+    "@radix-ui/react-separator": "^1.1.4",
     "@radix-ui/react-slot": "^1.2.0",
+    "@radix-ui/react-tooltip": "^1.2.4",
     "@tailwindcss/vite": "^4.1.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "frappe-react-sdk": "^1.11.0",
-    "lucide-react": "^0.503.0",
+    "lucide-react": "^0.505.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router-dom": "6.30.0",
     "tailwind-merge": "^3.2.0",
     "tailwindcss": "^4.1.4"
   },
