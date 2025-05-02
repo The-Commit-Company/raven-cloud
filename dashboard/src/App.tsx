@@ -1,16 +1,13 @@
 import './App.css'
 import { FrappeProvider } from 'frappe-react-sdk'
-import { Button } from '@/components/ui/button'
-function App() {
+import { RouterProvider } from 'react-router-dom'
+import { router } from './routes'
 
+function App() {
 	return (
-		<div className="App">
-			<FrappeProvider>
-				<div className="flex flex-col items-center justify-center min-h-svh">
-					<Button variant="default">Click me</Button>
-				</div>
-			</FrappeProvider>
-		</div>
+		<FrappeProvider>
+			<RouterProvider router={router} />
+		</FrappeProvider>
 	)
 }
 
