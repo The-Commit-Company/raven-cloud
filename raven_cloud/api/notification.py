@@ -6,16 +6,14 @@ import json
 from raven_cloud.utils.fcm import get_app
 
 @frappe.whitelist()
-def register_site():
+def register_site(site_name: str):
     frappe.only_for(["Raven Cloud User", "System Manager"])
 
-    site_url = frappe.request.host
-
     # Check if the site is already registered
-    if not frappe.db.exists("RC User Site", {"site": site_url}):
+    if not frappe.db.exists("RC User Site", {"site": site_name}):
         frappe.get_doc({
             "doctype": "RC User Site",
-            "site": site_url,
+            "site": site_name,
         }).insert()
 
     fcm_settings = frappe.get_doc("RC FCM Settings")
@@ -26,7 +24,7 @@ def register_site():
 	}
 
 @frappe.whitelist()
-def send(messages):
+def send(messages, site_name: str):
     """
     API which is a wrapper around the _send function. It takes in the messages and enqueues a background job to send the messages to tokens via FCM.
     Before enqueuing the job, it checks if the user has the necessary permissions to send notifications.
@@ -41,7 +39,7 @@ def send(messages):
     frappe.enqueue(
         _send,
         messages=messages,
-        site_url=frappe.request.host,
+        site_url=site_name,
         queue="short",
     )
 
