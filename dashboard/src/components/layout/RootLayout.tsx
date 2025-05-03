@@ -7,9 +7,11 @@ export default function RootLayout() {
         <div className="App">
             <SidebarProvider>
                 <AppSidebar />
-                <div className="flex-1">
+                <div className="flex flex-col flex-1">
                     <SidebarTrigger />
+                    <div className="flex flex-1 items-center justify-center">
                     <Outlet />
+                </div>
                 </div>
             </SidebarProvider>
         </div>

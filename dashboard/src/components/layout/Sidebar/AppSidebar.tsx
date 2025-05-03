@@ -22,7 +22,7 @@ const items = [
     },
     {
         title: "API Keys",
-        url: "/api-keys",
+        url: "/profile",
         icon: KeyRound,
     },
 ]
