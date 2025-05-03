@@ -21,6 +21,11 @@ export const ApiKeys = () => {
         fieldname: ["api_key"]
     }, currentUser ? `notification.api_key` : null)
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text)
+        toast.success("Copied to clipboard")
+    };
+
     return (
         <div className="container">
             <h1 className="text-3xl font-bold mb-2">API Keys</h1>
@@ -53,7 +58,7 @@ export const ApiKeys = () => {
                                                     variant="outline"
                                                     size="icon"
                                                     className="ml-2 transition-colors"
-                                                // onClick={() => copyToClipboard(apiKeys?.api_key)}
+                                                    onClick={() => copyToClipboard(data?.message?.api_key)}
                                                 >
                                                     <Copy className="h-4 w-4" />
                                                 </Button>
@@ -107,7 +112,6 @@ const ApiKeysDialog = ({ text }: { text: string }) => {
     const [apiKey, setApiKey] = useState<string | null>(null)
     const [apiSecret, setApiSecret] = useState<string | null>(null)
 
-    // Copy functionality with visual feedback
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text)
         toast.success("Copied to clipboard")
