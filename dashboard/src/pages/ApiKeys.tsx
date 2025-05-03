@@ -22,7 +22,7 @@ export const ApiKeys = () => {
     }, currentUser ? `notification.api_key` : null)
 
     return (
-        <div className="container p-8">
+        <div className="container">
             <h1 className="text-3xl font-bold mb-2">API Keys</h1>
             <p className="text-gray-600">
                 To send push notifications, you need to configure your API keys. These credentials

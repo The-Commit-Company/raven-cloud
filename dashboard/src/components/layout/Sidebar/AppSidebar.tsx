@@ -30,18 +30,18 @@ const items = [
 const comingSoonItems = [
     {
         title: "Typesense Search",
-        url: "#",
+        url: "/search",
         icon: Search,
     },
     {
-        title: "Video Calling",
-        url: "#",
-        icon: Video,
+        title: "Marketplace",
+        url: "/marketplace",
+        icon: Store,
     },
     {
-        title: "Marketplace",
-        url: "#",
-        icon: Store,
+        title: "Video Calling",
+        url: "/video-calling",
+        icon: Video,
     }
 ]
 
@@ -73,11 +73,15 @@ export function AppSidebar() {
                         <SidebarMenu>
                             {comingSoonItems.map((item) => (
                                 <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild>
-                                        <a href={item.url}>
+                                    <SidebarMenuButton asChild disabled>
+                                        {/* <Link to={item.url}>
                                             <item.icon />
                                             <span>{item.title}</span>
-                                        </a>
+                                        </Link> */}
+                                        <div className="flex items-center gap-2 cursor-not-allowed">
+                                            <item.icon />
+                                            <span>{item.title}</span>
+                                        </div>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}
