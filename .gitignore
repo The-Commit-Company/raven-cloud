@@ -6,4 +6,4 @@ tags
 node_modules
 __pycache__
 
-*.env
+.env.*
