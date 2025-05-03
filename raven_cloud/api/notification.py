@@ -146,11 +146,13 @@ def _send(messages, site_url: str):
 
             # store the failed/invalid tokens in RC Invalid Tokens doctype
             for token in failed_tokens:
-                frappe.get_doc({
-                    "doctype": "RC Invalid Tokens",
-                    "site": site_url,
-                    "invalid_token": token,
-                }).insert()
+                # check if the token is already in the RC Invalid Tokens doctype for the same site - if not then insert it
+                if not frappe.db.exists("RC Invalid Tokens", {"site": site_url, "invalid_token": token}):
+                    frappe.get_doc({
+                        "doctype": "RC Invalid Tokens",
+                        "site": site_url,
+                        "invalid_token": token,
+                    }).insert()
         else:
             success_tokens = all_tokens
 
