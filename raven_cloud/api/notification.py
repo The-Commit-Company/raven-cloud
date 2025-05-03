@@ -172,3 +172,26 @@ def _send(messages, site_url: str):
             "site": site_url,
             "error_traceback": frappe.get_traceback(e),
         }).insert()
+
+@frappe.whitelist(methods=["POST"])
+def generate_api_keys():
+    """
+    Generate api key and api secret for the session user, stores it in User doctype and returns the api key and api secret
+    """
+    frappe.only_for(["Raven Cloud User", "System Manager"])
+
+
+    # storing api key and secret in a separate variable(to return) as upon saving the secret it will be a password field.
+    user = frappe.get_doc("User", frappe.session.user)
+    api_secret = frappe.generate_hash(length=15)
+    api_key = None
+    if not user.api_key:
+        api_key = frappe.generate_hash(length=15)
+        user.api_key = api_key
+    user.api_secret = api_secret
+    user.save()
+
+    return {
+        "api_key": api_key if api_key else user.api_key,
+        "api_secret": api_secret,
+    }
