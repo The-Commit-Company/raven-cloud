@@ -10,9 +10,9 @@ def register_site(site_name: str):
     frappe.only_for("Raven Cloud User")
 
     # Check if the site is already registered
-    if not frappe.db.exists("RC User Site", {"site": site_name}):
+    if not frappe.db.exists("RC Site", {"site": site_name}):
         frappe.get_doc({
-            "doctype": "RC User Site",
+            "doctype": "RC Site",
             "site": site_name,
         }).insert()
 
@@ -32,8 +32,8 @@ def send(messages, site_name: str):
 
     frappe.only_for("Raven Cloud User")
 
-    # check if the site exists in RC User Site
-    if not frappe.db.exists("RC User Site", site_name):
+    # check if the site exists in RC Site
+    if not frappe.db.exists("RC Site", site_name):
         frappe.throw("Site not created for the user")
 
     if isinstance(messages, str):

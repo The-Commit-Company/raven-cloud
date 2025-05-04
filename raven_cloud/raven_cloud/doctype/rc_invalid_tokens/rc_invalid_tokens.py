@@ -7,8 +7,6 @@ from frappe.model.document import Document
 
 class RCInvalidTokens(Document):
 	# begin: auto-generated types
-	# ruff: noqa
-
 	# This code is auto-generated. Do not modify anything in this block.
 
 	from typing import TYPE_CHECKING
@@ -18,8 +16,6 @@ class RCInvalidTokens(Document):
 
 		invalid_token: DF.Text
 		site: DF.Link
-	# ruff: noqa
 	# end: auto-generated types
-
 
 	pass
