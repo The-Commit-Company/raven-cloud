@@ -25,14 +25,14 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Site",
-   "options": "RC User Site",
+   "options": "RC Site",
    "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-25 18:48:39.005764",
+ "modified": "2025-05-04 19:03:15.829168",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
  "name": "RC Invalid Tokens",

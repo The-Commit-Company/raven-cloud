@@ -5,7 +5,7 @@
 from frappe.model.document import Document
 
 
-class RCUserSite(Document):
+class RCSite(Document):
 	# begin: auto-generated types
 	# ruff: noqa
 
