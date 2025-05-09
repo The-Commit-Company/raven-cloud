@@ -4,6 +4,7 @@ import firebase_admin
 from firebase_admin import messaging
 import json
 from raven_cloud.utils.fcm import get_app
+from raven_cloud.utils.rc_caching import get_push_tokens_for_user
 
 @frappe.whitelist()
 def register_site(site_name: str):
@@ -131,6 +132,133 @@ def _send(messages, site_url: str):
 
         # send notifications via fcm in a batch
         response = messaging.send_each(fcm_messages, app=app)
+
+        failed_tokens = []
+        success_tokens = []
+
+        # failed and success tokens is used to keep track of the count of failed and success tokens and to store the failed/invalid tokens in RC Invalid Tokens doctype
+        if response.failure_count > 0:
+            responses = response.responses
+            for idx, response in enumerate(responses):
+                if response.success:
+                    success_tokens.append(all_tokens[idx])
+                else:
+                    failed_tokens.append(all_tokens[idx])
+
+            # store the failed/invalid tokens in RC Invalid Tokens doctype
+            for token in failed_tokens:
+                # check if the token is already in the RC Invalid Tokens doctype for the same site - if not then insert it
+                if not frappe.db.exists("RC Invalid Tokens", {"site": site_url, "invalid_token": token}):
+                    frappe.get_doc({
+                        "doctype": "RC Invalid Tokens",
+                        "site": site_url,
+                        "invalid_token": token,
+                    }).insert()
+        else:
+            success_tokens = all_tokens
+
+        # store the response in RC Push Notification Log
+        frappe.get_doc({
+            "doctype": "RC Push Notification Log",
+            "user": frappe.session.user,
+            "site": site_url,
+            "number_of_messages": len(messages),
+            "number_of_tokens": len(all_tokens),
+            "success_tokens": len(success_tokens),
+            "failed_tokens": len(failed_tokens),
+        }).insert()
+
+    except Exception as e:
+        frappe.get_doc({
+            "doctype": "RC Push Notification Error Log",
+            "user": frappe.session.user,
+            "site": site_url,
+            "error_traceback": frappe.get_traceback(e),
+        }).insert()
+
+def _send_to_tokens(messages, site_url: str, users: list[str]):
+    """
+    Send messages to users via FCM
+    
+    - Users is a list of user ids (Raven User ids)
+    - Messages is a list of messages to send to the users
+    Each message is a dictionary with the following keys:
+        - notification: dict
+            - title: str
+            - body: str
+        - data: dict - this is for custom data or background messages
+        - tag(optional): str - tag to group messages together
+        - image(optional): str - image to display in the notification
+        - click_action(optional): str - action to perform when the user clicks the notification - web only
+    """
+    app = get_app()
+
+    # get the push tokens for the users
+    all_tokens = []
+    for user in users:
+        all_tokens.extend(get_push_tokens_for_user(user))
+
+    fcm_messages = []
+    try:
+        for message in messages:
+            notification = None
+            data = None
+            webpush = None
+            android = None
+            apns = None
+
+            if message.get("notification"):
+                notification = messaging.Notification(
+                    title=message["notification"]["title"],
+                    body=message["notification"]["body"],
+                    image=message.get("image", None),
+                )
+
+                if message.get("click_action"):
+                    if message.get("click_action").startswith("https://"):
+                        webpush = messaging.WebpushConfig(
+                            fcm_options=messaging.WebpushFCMOptions(
+                                link=message.get("click_action", None),
+                            ),
+                        )
+            
+                if message.get("tag") or message.get("image"):
+                    android = messaging.AndroidConfig(
+                        notification=messaging.AndroidNotification(
+                            tag=message.get("tag", None),
+                            image=message.get("image", None),
+                            priority="high",
+                        ),
+                    )
+            
+                apns = messaging.APNSConfig(
+                    fcm_options=messaging.APNSFCMOptions(
+                        image=message.get("image", None),
+                    ),
+                    payload=messaging.APNSPayload(
+                        aps=messaging.Aps(
+                            content_available=True,
+                        ),
+                    ),
+                )
+            
+            if message.get("data"):
+                data = message["data"]
+
+            for token in all_tokens:
+                fcm_message = messaging.Message(
+                    token=token,
+                    notification=notification,
+                    data=data,
+                    webpush=webpush,
+                    android=android,
+                    apns=apns,
+                )
+                fcm_messages.append(fcm_message)
+
+        # send notifications via fcm in a batch
+        response = messaging.send_each(fcm_messages, app=app)
+        
 
         failed_tokens = []
         success_tokens = []
