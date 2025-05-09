@@ -379,13 +379,19 @@ def create_site_channel(channel_id: str, site_name: str):
     if not site:
         frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
 
-    # create a new channel if it doesn't exist
-    if not frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id}):
-        frappe.get_doc({
-            "doctype": "RC Site Channel",
-            "site": site,
-            "channel_id": channel_id,
-        }).insert()
+    try:
+
+        # create a new channel if it doesn't exist
+        if not frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id}):
+            frappe.get_doc({
+                "doctype": "RC Site Channel",
+                "site": site,
+                "channel_id": channel_id,
+            }).insert()
+    
+    except Exception as e:
+        frappe.log_error(title=f"Error creating site channel for {channel_id} of {site_name}", message=frappe.get_traceback())
+        frappe.throw(f"Error creating site channel for {channel_id} of {site_name} - {str(e)}")
     
     return {
         "status": "success",
@@ -406,32 +412,37 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
     if not site:
         frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
     
-    channel = frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id})
+    try:
+        channel = frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id})
 
-    if not channel:
-        frappe.get_doc({
-            "doctype": "RC Site Channel",
-            "site": site,
-            "channel_id": channel_id,
-        }).insert()
+        if not channel:
+            frappe.get_doc({
+                "doctype": "RC Site Channel",
+                "site": site,
+                "channel_id": channel_id,
+            }).insert()
+        
+        # check if the user exists
+        user = frappe.db.exists("RC Site User", {"site": site, "user_id": user_id})
+
+        if not user:
+            frappe.get_doc({
+                "doctype": "RC Site User",
+                "site": site,
+                "user_id": user_id,
+            }).insert()
+
+        # check if the user is subscribed to the channel
+        if not frappe.db.exists("RC Site Channel Subscription", {"user": user, "channel": channel}):
+            frappe.get_doc({
+                "doctype": "RC Site Channel Subscription",
+                "user": user,
+                "channel": channel,
+            }).insert()
     
-    # check if the user exists
-    user = frappe.db.exists("RC Site User", {"site": site, "user_id": user_id})
-
-    if not user:
-        frappe.get_doc({
-            "doctype": "RC Site User",
-            "site": site,
-            "user_id": user_id,
-        }).insert()
-
-    # check if the user is subscribed to the channel
-    if not frappe.db.exists("RC Site Channel Subscription", {"user": user, "channel": channel}):
-        frappe.get_doc({
-            "doctype": "RC Site Channel Subscription",
-            "user": user,
-            "channel": channel,
-        }).insert()
+    except Exception as e:
+        frappe.log_error(title=f"Error subscribing to site channel for {user_id} of {site_name}", message=frappe.get_traceback())
+        frappe.throw(f"Error subscribing to site channel for {user_id} of {site_name} - {str(e)}")
 
     return {
         "status": "success",
@@ -455,6 +466,33 @@ def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str)
     user = frappe.db.get_value("RC Site User", {"site": site, "user_id": user_id}, ["name"])
 
     frappe.db.delete("RC Site Channel Subscription", {"user": user, "channel": channel})
+
+    return {
+        "status": "success",
+    }
+
+@frappe.whitelist(methods=["POST"])
+def bulk_create_site_user_and_token(site_name: str, users: list[dict]):
+    """
+    Bulk create site user and token for the given site and users.
+    
+    users is a list of dictionaries with the following keys:
+        - user_id: str
+        - token: str
+    """
+    
+    error_messages = []
+
+    for user in users:
+        try:
+            create_site_user_and_token(site_name, user.get("user_id"), user.get("token"))
+        except Exception as e:
+            error_message = f"Error creating site user and token for {user.get('user_id')} of {site_name}"
+            error_messages.append(f"{error_message} - {str(e)}")
+            frappe.log_error(title=error_message, message=frappe.get_traceback())
+
+    if error_messages:
+        frappe.throw(f"Failed to create some site users and tokens: {'; '.join(error_messages)}")
 
     return {
         "status": "success",
