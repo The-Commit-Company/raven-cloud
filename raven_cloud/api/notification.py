@@ -416,7 +416,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
         channel = frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id})
 
         if not channel:
-            frappe.get_doc({
+            channel = frappe.get_doc({
                 "doctype": "RC Site Channel",
                 "site": site,
                 "channel_id": channel_id,
@@ -426,7 +426,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
         user = frappe.db.exists("RC Site User", {"site": site, "user_id": user_id})
 
         if not user:
-            frappe.get_doc({
+            user = frappe.get_doc({
                 "doctype": "RC Site User",
                 "site": site,
                 "user_id": user_id,
