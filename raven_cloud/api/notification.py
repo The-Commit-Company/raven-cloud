@@ -197,3 +197,137 @@ def generate_api_keys():
         "api_key": api_key if api_key else user.api_key,
         "api_secret": api_secret,
     }
+
+@frappe.whitelist(methods=["POST"])
+def create_site_user_and_token(site_name: str, user_id: str, token: str):
+    """
+        This api would be used as a sync api between raven cloud and the raven client app.
+        
+    """
+    # check if the site exists
+    if not frappe.db.exists("RC Site", site_name):
+        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+
+    site_user = frappe.db.exists("RC Site User", {"site": site_name, "user_id": user_id})
+
+    # check if the site user already exists, if not then create a new site user
+    if not site_user:
+
+        site_user = frappe.get_doc({
+            "doctype": "RC Site User",
+            "site": site_name,
+            "user_id": user_id,
+        })
+        site_user.insert()
+
+        # store the token in the RC Site User doctype
+        frappe.get_doc({
+            "doctype": "RC Site User Token",
+            "user": site_user.name,
+            "fcm_token": token,
+        }).insert()
+
+    else:
+        # store the token in the RC Site User doctype
+        frappe.get_doc({
+            "doctype": "RC Site User Token",
+            "user": site_user,
+            "fcm_token": token,
+        }).insert()
+
+    return {
+        "status": "success",
+    }
+
+@frappe.whitelist(methods=["POST"])
+def create_site_channel(channel_id: str, site_name: str):
+    """
+    API for channel/topic creation.
+    This would ideally be called when the user creates a new channel/topic in the raven client app.
+    """
+
+    site = frappe.db.exists("RC Site", site_name)
+
+    if not site:
+        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+
+    # create a new channel if it doesn't exist
+    if not frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id}):
+        frappe.get_doc({
+            "doctype": "RC Site Channel",
+            "site": site,
+            "channel_id": channel_id,
+        }).insert()
+    
+    return {
+        "status": "success",
+    }
+
+@frappe.whitelist(methods=["POST"])
+def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
+    """
+    API for channel/topic based subscription.
+
+    Create a RC Site Channel if site channel does not exist.
+    Create a RC Site User if site user does not exist.
+    Create a RC Site Channel subscription if the user is not subscribed to the channel.
+    """
+
+    site = frappe.db.exists("RC Site", site_name)
+
+    if not site:
+        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+    
+    channel = frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id})
+
+    if not channel:
+        frappe.get_doc({
+            "doctype": "RC Site Channel",
+            "site": site,
+            "channel_id": channel_id,
+        }).insert()
+    
+    # check if the user exists
+    user = frappe.db.exists("RC Site User", {"site": site, "user_id": user_id})
+
+    if not user:
+        frappe.get_doc({
+            "doctype": "RC Site User",
+            "site": site,
+            "user_id": user_id,
+        }).insert()
+
+    # check if the user is subscribed to the channel
+    if not frappe.db.exists("RC Site Channel Subscription", {"user": user, "channel": channel}):
+        frappe.get_doc({
+            "doctype": "RC Site Channel Subscription",
+            "user": user,
+            "channel": channel,
+        }).insert()
+
+    return {
+        "status": "success",
+    }
+
+@frappe.whitelist(methods=["POST"])
+def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str):
+    """
+    API for channel/topic based unsubscription.
+
+    Delete a RC Site Channel subscription if the user is subscribed to the channel.
+    """
+
+    site = frappe.db.exists("RC Site", site_name)
+
+    if not site:
+        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+    
+    # channel subscription only exists if the channel and user exists, so we don't need to check for the existence of the channel and user
+    channel = frappe.db.get_value("RC Site Channel", {"site": site, "channel_id": channel_id}, ["name"])
+    user = frappe.db.get_value("RC Site User", {"site": site, "user_id": user_id}, ["name"])
+
+    frappe.db.delete("RC Site Channel Subscription", {"user": user, "channel": channel})
+
+    return {
+        "status": "success",
+    }
