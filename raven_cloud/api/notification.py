@@ -177,7 +177,7 @@ def _send(messages, site_url: str):
         }).insert()
 
 @frappe.whitelist()
-def send_to_users(messages, site_name: str, users: list[str]):
+def send_to_users(messages, site_name: str):
     """
     Send messages to users via FCM.
     Users is a list of user ids (Raven User ids)
@@ -196,20 +196,19 @@ def send_to_users(messages, site_name: str, users: list[str]):
         _send_to_users,
         messages=messages,
         site_url=site_name,
-        users=users,
         queue="short",
     )
 
     # TODO: Return the response from api itself.
     return
 
-def _send_to_users(messages, site_url: str, users: list[str]):
+def _send_to_users(messages, site_url: str):
     """
     Send messages to users via FCM
     
-    - Users is a list of user ids (Raven User ids)
     - Messages is a list of messages to send to the users
     Each message is a dictionary with the following keys:
+        - users: list(str)
         - notification: dict
             - title: str
             - body: str
@@ -220,14 +219,18 @@ def _send_to_users(messages, site_url: str, users: list[str]):
     """
     app = get_app()
 
-    # get the push tokens for the users
-    all_tokens = []
-    for user in users:
-        all_tokens.extend(get_push_tokens_for_user(user))
-
     fcm_messages = []
     try:
         for message in messages:
+
+            # get the push tokens for the users
+            all_tokens = []
+            for user in message.get("users", []):
+                all_tokens.extend(get_push_tokens_for_user(user, site_url))
+            
+            if not all_tokens:
+                continue
+
             notification = None
             data = None
             webpush = None
@@ -282,6 +285,9 @@ def _send_to_users(messages, site_url: str, users: list[str]):
                     apns=apns,
                 )
                 fcm_messages.append(fcm_message)
+
+        if not fcm_messages:
+            return
 
         # send notifications via fcm in a batch
         response = messaging.send_each(fcm_messages, app=app)
