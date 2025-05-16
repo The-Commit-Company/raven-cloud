@@ -176,7 +176,34 @@ def _send(messages, site_url: str):
             "error_traceback": frappe.get_traceback(e),
         }).insert()
 
-def _send_to_tokens(messages, site_url: str, users: list[str]):
+@frappe.whitelist()
+def send_to_users(messages, site_name: str, users: list[str]):
+    """
+    Send messages to users via FCM.
+    Users is a list of user ids (Raven User ids)
+    """
+    frappe.only_for("Raven Cloud User")
+
+    # check if the site exists
+    if not frappe.db.exists("RC Site", site_name):
+        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+
+    if isinstance(messages, str):
+        messages = json.loads(messages)
+
+    # enqueue the job of sending notifications
+    frappe.enqueue(
+        _send_to_users,
+        messages=messages,
+        site_url=site_name,
+        users=users,
+        queue="short",
+    )
+
+    # TODO: Return the response from api itself.
+    return
+
+def _send_to_users(messages, site_url: str, users: list[str]):
     """
     Send messages to users via FCM
     
