@@ -55,14 +55,14 @@
    "fieldname": "site",
    "fieldtype": "Link",
    "label": "Site",
-   "options": "RC User Site",
+   "options": "RC Site",
    "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-25 18:45:38.587029",
+ "modified": "2025-05-04 19:03:15.597176",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
  "name": "RC Push Notification Log",

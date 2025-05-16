@@ -5,7 +5,7 @@
 from frappe.model.document import Document
 
 
-class RCPushNotificationLog(Document):
+class RCSiteChannel(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -14,12 +14,8 @@ class RCPushNotificationLog(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		failed_tokens: DF.Int
-		number_of_messages: DF.Int
-		number_of_tokens: DF.Int
+		channel_id: DF.Data
 		site: DF.Link
-		success_tokens: DF.Int
-		user: DF.Link
 	# end: auto-generated types
 
 	pass

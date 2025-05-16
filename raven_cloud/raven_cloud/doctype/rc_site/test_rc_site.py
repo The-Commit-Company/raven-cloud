@@ -12,18 +12,18 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class UnitTestRCUserSite(UnitTestCase):
+class UnitTestRCSite(UnitTestCase):
 	"""
-	Unit tests for RCUserSite.
+	Unit tests for RCSite.
 	Use this class for testing individual functions and methods.
 	"""
 
 	pass
 
 
-class IntegrationTestRCUserSite(IntegrationTestCase):
+class IntegrationTestRCSite(IntegrationTestCase):
 	"""
-	Integration tests for RCUserSite.
+	Integration tests for RCSite.
 	Use this class for testing interactions between multiple components.
 	"""
 

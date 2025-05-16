@@ -7,8 +7,6 @@ from frappe.model.document import Document
 
 class RCPushNotificationErrorLog(Document):
 	# begin: auto-generated types
-	# ruff: noqa
-
 	# This code is auto-generated. Do not modify anything in this block.
 
 	from typing import TYPE_CHECKING
@@ -20,8 +18,6 @@ class RCPushNotificationErrorLog(Document):
 		error_traceback: DF.LongText | None
 		site: DF.Link | None
 		user: DF.Link
-	# ruff: noqa
 	# end: auto-generated types
-
 
 	pass

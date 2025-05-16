@@ -1,59 +1,38 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2025-04-25 15:16:15.912951",
+ "creation": "2025-05-04 19:05:12.340064",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "user",
-  "column_break_kjgq",
   "site",
-  "section_break_ixta",
-  "error_traceback",
-  "error_response"
+  "user_id"
  ],
  "fields": [
-  {
-   "fieldname": "column_break_kjgq",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_ixta",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "user",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "User",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "error_traceback",
-   "fieldtype": "Long Text",
-   "label": "Error TraceBack"
-  },
   {
    "fieldname": "site",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Site URL",
-   "options": "RC Site"
+   "label": "Site",
+   "options": "RC Site",
+   "reqd": 1
   },
   {
-   "fieldname": "error_response",
-   "fieldtype": "Long Text",
-   "label": "Error Response"
+   "description": "Raven User ID on the Raven Site",
+   "fieldname": "user_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "User ID",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-04 19:03:15.901750",
+ "modified": "2025-05-04 19:07:34.436252",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
- "name": "RC Push Notification Error Log",
+ "name": "RC Site User",
  "owner": "Administrator",
  "permissions": [
   {

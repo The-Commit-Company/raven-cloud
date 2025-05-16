@@ -4,8 +4,10 @@
 # import frappe
 from frappe.model.document import Document
 
+from raven_cloud.utils.rc_caching import clear_push_tokens_for_user_cache
 
-class RCPushNotificationLog(Document):
+
+class RCSiteUserToken(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -14,12 +16,18 @@ class RCPushNotificationLog(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		failed_tokens: DF.Int
-		number_of_messages: DF.Int
-		number_of_tokens: DF.Int
-		site: DF.Link
-		success_tokens: DF.Int
+		fcm_token: DF.SmallText
 		user: DF.Link
 	# end: auto-generated types
 
-	pass
+	def after_insert(self):
+		self.invalidate_cache()
+	
+	def after_delete(self):
+		self.invalidate_cache()
+	
+	def on_update(self):
+		self.invalidate_cache()
+	
+	def invalidate_cache(self):
+		clear_push_tokens_for_user_cache(self.user)

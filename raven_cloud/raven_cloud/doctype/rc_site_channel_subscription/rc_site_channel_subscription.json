@@ -1,32 +1,38 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:site",
- "creation": "2025-04-25 18:36:52.523659",
+ "creation": "2025-05-04 19:08:59.116920",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "site"
+  "channel",
+  "user"
  ],
  "fields": [
   {
-   "fieldname": "site",
-   "fieldtype": "Data",
+   "fieldname": "channel",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Site",
-   "length": 300,
-   "reqd": 1,
-   "unique": 1
+   "label": "Channel",
+   "options": "RC Site Channel",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "RC Site User",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-29 16:08:43.664813",
+ "modified": "2025-05-04 19:09:32.519000",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
- "name": "RC User Site",
- "naming_rule": "By fieldname",
+ "name": "RC Site Channel Subscription",
  "owner": "Administrator",
  "permissions": [
   {

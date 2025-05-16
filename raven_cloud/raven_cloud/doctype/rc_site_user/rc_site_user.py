@@ -5,10 +5,8 @@
 from frappe.model.document import Document
 
 
-class RCUserSite(Document):
+class RCSiteUser(Document):
 	# begin: auto-generated types
-	# ruff: noqa
-
 	# This code is auto-generated. Do not modify anything in this block.
 
 	from typing import TYPE_CHECKING
@@ -16,9 +14,8 @@ class RCUserSite(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		site: DF.Data
-	# ruff: noqa
+		site: DF.Link
+		user_id: DF.Data
 	# end: auto-generated types
-
 
 	pass
