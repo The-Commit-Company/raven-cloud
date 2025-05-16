@@ -177,7 +177,7 @@ def _send(messages, site_url: str):
         }).insert()
 
 @frappe.whitelist()
-def send_to_users(messages, site_name: str, users: list[str]):
+def send_to_users(messages, site_name: str):
     """
     Send messages to users via FCM.
     Users is a list of user ids (Raven User ids)
@@ -196,20 +196,19 @@ def send_to_users(messages, site_name: str, users: list[str]):
         _send_to_users,
         messages=messages,
         site_url=site_name,
-        users=users,
         queue="short",
     )
 
     # TODO: Return the response from api itself.
     return
 
-def _send_to_users(messages, site_url: str, users: list[str]):
+def _send_to_users(messages, site_url: str):
     """
     Send messages to users via FCM
     
-    - Users is a list of user ids (Raven User ids)
     - Messages is a list of messages to send to the users
     Each message is a dictionary with the following keys:
+        - users: list(str)
         - notification: dict
             - title: str
             - body: str
@@ -220,14 +219,18 @@ def _send_to_users(messages, site_url: str, users: list[str]):
     """
     app = get_app()
 
-    # get the push tokens for the users
-    all_tokens = []
-    for user in users:
-        all_tokens.extend(get_push_tokens_for_user(user))
-
     fcm_messages = []
     try:
         for message in messages:
+
+            # get the push tokens for the users
+            all_tokens = []
+            for user in message.get("users", []):
+                all_tokens.extend(get_push_tokens_for_user(user, site_url))
+            
+            if not all_tokens:
+                continue
+
             notification = None
             data = None
             webpush = None
@@ -282,6 +285,9 @@ def _send_to_users(messages, site_url: str, users: list[str]):
                     apns=apns,
                 )
                 fcm_messages.append(fcm_message)
+
+        if not fcm_messages:
+            return
 
         # send notifications via fcm in a batch
         response = messaging.send_each(fcm_messages, app=app)
@@ -353,17 +359,34 @@ def generate_api_keys():
         "api_secret": api_secret,
     }
 
+
+def check_if_site_exists(site_name: str, throw: bool = True):
+    """
+    Check if the site exists.
+    """
+    if not frappe.db.exists("RC Site", site_name):
+        if throw:
+            frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+        else:
+            return False
+    return True
+
+def get_site_user(site_name: str, user_id: str):
+    """
+    Get the site user for the given site and user id.
+    """
+    return frappe.db.exists("RC Site User", {"site": site_name, "user_id": user_id})
+
 @frappe.whitelist(methods=["POST"])
-def create_site_user_and_token(site_name: str, user_id: str, token: str):
+def create_user_token(site_name: str, user_id: str, token: str):
     """
         This api would be used as a sync api between raven cloud and the raven client app.
         
     """
     # check if the site exists
-    if not frappe.db.exists("RC Site", site_name):
-        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+    check_if_site_exists(site_name)
 
-    site_user = frappe.db.exists("RC Site User", {"site": site_name, "user_id": user_id})
+    site_user = get_site_user(site_name, user_id)
 
     # check if the site user already exists, if not then create a new site user
     if not site_user:
@@ -393,6 +416,24 @@ def create_site_user_and_token(site_name: str, user_id: str, token: str):
     return {
         "status": "success",
     }
+
+@frappe.whitelist(methods=["POST"])
+def delete_user_token(site_name: str, user_id: str, token: str):
+    """
+    Delete a user token for the given site and user.
+    """
+    check_if_site_exists(site_name)
+
+    site_user = get_site_user(site_name, user_id)
+
+    id = frappe.db.exists("RC Site User Token", {"user": site_user, "fcm_token": token})
+
+    if not id:
+        return
+    
+    doc = frappe.get_doc("RC Site User Token", id)
+    doc.delete()
+
 
 @frappe.whitelist(methods=["POST"])
 def create_site_channel(channel_id: str, site_name: str):

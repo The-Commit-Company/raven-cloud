@@ -4,6 +4,8 @@
 # import frappe
 from frappe.model.document import Document
 
+from raven_cloud.utils.rc_caching import clear_push_tokens_for_user_cache
+
 
 class RCSiteUserToken(Document):
 	# begin: auto-generated types
@@ -18,4 +20,14 @@ class RCSiteUserToken(Document):
 		user: DF.Link
 	# end: auto-generated types
 
-	pass
+	def after_insert(self):
+		self.invalidate_cache()
+	
+	def after_delete(self):
+		self.invalidate_cache()
+	
+	def on_update(self):
+		self.invalidate_cache()
+	
+	def invalidate_cache(self):
+		clear_push_tokens_for_user_cache(self.user)
