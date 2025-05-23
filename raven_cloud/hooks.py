@@ -11,15 +11,15 @@ app_license = "agpl-3.0"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "raven_cloud",
-# 		"logo": "/assets/raven_cloud/logo.png",
-# 		"title": "Raven Cloud",
-# 		"route": "/raven_cloud",
-# 		"has_permission": "raven_cloud.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "raven_cloud",
+		"logo": "/assets/raven_cloud/logo.png",
+		"title": "Raven Cloud",
+		"route": "/dashboard",
+		# "has_permission": "raven_cloud.api.permission.has_app_permission"
+	}
+]
 
 # Includes in <head>
 # ------------------
