@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Home, KeyRound, Search, Video, Store } from "lucide-react"
 import { Link } from "react-router-dom"
+import { NavUser } from "@/components/layout/Sidebar/NavUser"
 
 // Menu items.
 const items = [
@@ -89,7 +90,9 @@ export function AppSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter />
+            <SidebarFooter>
+                <NavUser />
+            </SidebarFooter>
         </Sidebar>
     )
 }
