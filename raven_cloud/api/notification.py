@@ -418,13 +418,16 @@ def create_user_token(site_name: str, user_id: str, token: str):
     }
 
 @frappe.whitelist(methods=["POST"])
-def import_user_tokens(site_name: str, tokens: list[dict]):
+def import_user_tokens(site_name: str, tokens):
     """
     Import user tokens for the given site.
     tokens is a list of dictionaries with the following keys:
         - user: str
         - fcm_token: str
     """
+
+    if isinstance(tokens, str):
+        tokens = json.loads(tokens)
 
     check_if_site_exists(site_name)
 
