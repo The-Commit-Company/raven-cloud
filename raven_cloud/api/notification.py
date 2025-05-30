@@ -418,6 +418,47 @@ def create_user_token(site_name: str, user_id: str, token: str):
     }
 
 @frappe.whitelist(methods=["POST"])
+def import_user_tokens(site_name: str, tokens: list[dict]):
+    """
+    Import user tokens for the given site.
+    tokens is a list of dictionaries with the following keys:
+        - user: str
+        - fcm_token: str
+    """
+
+    check_if_site_exists(site_name)
+
+    user_map = {}
+
+    for token in tokens:
+        if not user_map.get(token.get("user")):
+            user = get_site_user(site_name, token.get("user"))
+
+            if not user:
+                user = frappe.get_doc({
+                    "doctype": "RC Site User",
+                    "site": site_name,
+                    "user_id": token.get("user"),
+                }).insert().name
+
+            user_map[token.get("user")] = user
+        
+
+        if frappe.db.exists("RC Site User Token", {"user": user_map[token.get("user")], "fcm_token": token.get("fcm_token")}):
+            continue
+
+        
+        frappe.get_doc({
+            "doctype": "RC Site User Token",
+            "user": user_map[token.get("user")],
+            "fcm_token": token.get("fcm_token"),
+        }).insert()
+    
+    return {
+        "status": "success",
+    }
+
+@frappe.whitelist(methods=["POST"])
 def delete_user_token(site_name: str, user_id: str, token: str):
     """
     Delete a user token for the given site and user.
