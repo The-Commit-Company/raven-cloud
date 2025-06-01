@@ -352,7 +352,7 @@ def generate_api_keys():
         api_key = frappe.generate_hash(length=15)
         user.api_key = api_key
     user.api_secret = api_secret
-    user.save()
+    user.save(ignore_permissions=True)
 
     return {
         "api_key": api_key if api_key else user.api_key,
