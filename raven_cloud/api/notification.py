@@ -92,6 +92,9 @@ def _send(messages, site_url: str):
                             fcm_options=messaging.WebpushFCMOptions(
                                 link=message.get("click_action", None),
                             ),
+                            notification=messaging.WebpushNotification(
+                                sound="default",
+                            ),
                         )
             
                 if message.get("tag") or message.get("image"):
@@ -100,6 +103,7 @@ def _send(messages, site_url: str):
                             tag=message.get("tag", None),
                             image=message.get("image", None),
                             priority="high",
+                            sound="default",
                         ),
                     )
             
@@ -110,6 +114,7 @@ def _send(messages, site_url: str):
                     payload=messaging.APNSPayload(
                         aps=messaging.Aps(
                             content_available=True,
+                            sound="default",
                         ),
                     ),
                 )    
@@ -250,6 +255,9 @@ def _send_to_users(messages, site_url: str):
                             fcm_options=messaging.WebpushFCMOptions(
                                 link=message.get("click_action", None),
                             ),
+                             notification=messaging.WebpushNotification(
+                                sound="default",
+                            ),
                         )
             
                 if message.get("tag") or message.get("image"):
@@ -258,6 +266,7 @@ def _send_to_users(messages, site_url: str):
                             tag=message.get("tag", None),
                             image=message.get("image", None),
                             priority="high",
+                            sound="default",
                         ),
                     )
             
@@ -268,6 +277,7 @@ def _send_to_users(messages, site_url: str):
                     payload=messaging.APNSPayload(
                         aps=messaging.Aps(
                             content_available=True,
+                            sound="default",
                         ),
                     ),
                 )
