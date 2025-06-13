@@ -91,10 +91,7 @@ def _send(messages, site_url: str):
                         webpush = messaging.WebpushConfig(
                             fcm_options=messaging.WebpushFCMOptions(
                                 link=message.get("click_action", None),
-                            ),
-                            notification=messaging.WebpushNotification(
-                                sound="default",
-                            ),
+                            )
                         )
             
                 if message.get("tag") or message.get("image"):
@@ -254,10 +251,7 @@ def _send_to_users(messages, site_url: str):
                         webpush = messaging.WebpushConfig(
                             fcm_options=messaging.WebpushFCMOptions(
                                 link=message.get("click_action", None),
-                            ),
-                             notification=messaging.WebpushNotification(
-                                sound="default",
-                            ),
+                            )
                         )
             
                 if message.get("tag") or message.get("image"):
