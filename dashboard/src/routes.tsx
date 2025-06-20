@@ -7,13 +7,16 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute"
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
-        <Route path="/" element={<ProtectedRoute />} >
-        <Route path="/" element={<RootLayout />}>
-            <Route index element={<Home />} />
-            <Route path="profile" element={<ApiKeys />} />
-            <Route path="*" element={<NotFound />} />
-        </Route>
-        </Route>
+        <>
+            <Route path="/login" element={<div>Login Page</div>} />
+            <Route path="/" element={<ProtectedRoute />}>
+                <Route element={<RootLayout />}>
+                    <Route index element={<Home />} /> 
+                    <Route path="profile" element={<ApiKeys />} />
+                    <Route path="*" element={<NotFound />} />
+                </Route>
+            </Route>
+        </>
     ),
     {
         basename: import.meta.env.VITE_BASE_NAME ? `/${import.meta.env.VITE_BASE_NAME}` : '',

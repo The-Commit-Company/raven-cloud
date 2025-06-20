@@ -5,8 +5,22 @@ import { Toaster } from 'sonner'
 import { router } from '@/routes'
 
 function App() {
+
+	const getSiteName = () => {
+		// @ts-ignore
+		if (window.frappe?.boot?.versions?.frappe.startsWith('14')) {
+			return import.meta.env.VITE_SITE_NAME
+		}
+		// @ts-ignore
+		else {
+			// @ts-ignore
+			return window.frappe?.boot?.sitename ?? import.meta.env.VITE_SITE_NAME
+		}
+	}
+
 	return (
-		<FrappeProvider>
+		<FrappeProvider siteName={getSiteName()} url={import.meta.env.VITE_FRAPPE_PATH ?? ''}
+			socketPort={import.meta.env.VITE_SOCKET_PORT ? import.meta.env.VITE_SOCKET_PORT : undefined}>
 			<UserProvider>
 				<Toaster richColors />
 				<RouterProvider router={router} />
