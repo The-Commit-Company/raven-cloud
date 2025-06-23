@@ -176,6 +176,7 @@ def _send(messages, site_url: str):
             "user": frappe.session.user,
             "site": site_url,
             "error_traceback": frappe.get_traceback(e),
+            "error_response": json.dumps(messages),
         }).insert()
 
 @frappe.whitelist()
@@ -338,6 +339,7 @@ def _send_to_users(messages, site_url: str):
             "user": frappe.session.user,
             "site": site_url,
             "error_traceback": frappe.get_traceback(e),
+            "error_response": json.dumps(messages),
         }).insert()
 
 @frappe.whitelist(methods=["POST"])
