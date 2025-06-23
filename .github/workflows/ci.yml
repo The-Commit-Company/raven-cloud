@@ -14,8 +14,6 @@ concurrency:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     name: Server
 
     services:
@@ -77,8 +75,8 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install MariaDB Client
-        run: sudo apt-get install mariadb-client-10.6
-
+        run: sudo apt-get update && sudo apt-get install -y mariadb-client
+  
       - name: Setup
         run: |
           pip install frappe-bench
