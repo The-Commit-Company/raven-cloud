@@ -192,7 +192,6 @@ def _send(messages, site_url: str):
             }
         ).insert()
 
-
 @frappe.whitelist()
 def send_to_users(messages, site_name: str):
     """
