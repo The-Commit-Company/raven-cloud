@@ -1,0 +1,119 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:title",
+ "beta": 1,
+ "creation": "2025-07-19 12:06:17.688843",
+ "default_view": "List",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "image",
+  "raven_bot",
+  "is_ai_bot",
+  "column_break_tsta",
+  "status",
+  "description",
+  "section_break_ftgf",
+  "long_description",
+  "dependencies_section",
+  "linked_apps"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  },
+  {
+   "fieldname": "raven_bot",
+   "fieldtype": "Link",
+   "label": "Raven Bot",
+   "options": "Raven Bot",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "raven_bot.is_ai_bot",
+   "fieldname": "is_ai_bot",
+   "fieldtype": "Check",
+   "label": "Is AI Bot?",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tsta",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nPublished\nIn Review\nAttention Required\nRejected\nDisabled"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_ftgf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "long_description",
+   "fieldtype": "Text Editor",
+   "label": "Long Description"
+  },
+  {
+   "fieldname": "dependencies_section",
+   "fieldtype": "Section Break",
+   "label": "Dependencies"
+  },
+  {
+   "fieldname": "linked_apps",
+   "fieldtype": "Table",
+   "label": "Linked Apps",
+   "options": "Raven Marketplace Linked App"
+  }
+ ],
+ "grid_page_length": 50,
+ "image_field": "image",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-07-19 12:06:17.688843",
+ "modified_by": "Administrator",
+ "module": "Raven Cloud",
+ "name": "Raven Marketplace",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
