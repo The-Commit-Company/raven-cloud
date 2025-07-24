@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from api.typesense import get_typesense_client, get_collection_schema
+from raven_cloud.api.typesense import get_typesense_client, get_collection_schema
 
 
 class RCTypesenseClient(Document):
