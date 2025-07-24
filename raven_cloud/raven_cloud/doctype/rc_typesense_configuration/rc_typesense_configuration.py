@@ -16,8 +16,10 @@ class RCTypesenseConfiguration(Document):
 
         api_key: DF.Data
         host: DF.Data
-        port: DF.Data
+        port: DF.Data | None
         protocol: DF.Literal["http", "https"]
     # end: auto-generated types
 
-    pass
+    def before_save(self):
+        if self.protocol == "https":
+            self.port = 443
