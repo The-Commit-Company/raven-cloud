@@ -31,14 +31,16 @@ def get_collection_schema(hash):
         'name': f'{hash}_messages',
         'fields': [
                 {'name': 'id', 'type': 'string'},
-                {'name': 'channel_id', 'type': 'string', 'facet': True},
-                {'name': 'content', 'type': 'string'},
+                {'name': 'parent_channel_id', 'type': 'string', 'facet': True},
+                {'name': 'channel_id', 'type': 'string'},
+                {'name': 'content', 'type': 'string', 'stem': True},
                 {'name': 'message_type', 'type': 'string'},
+                {'name': 'file_type', 'type': 'string', 'optional': True},
                 {'name': 'is_thread', 'type': 'int32'},
                 {'name': 'is_bot_message', 'type': 'int32'},
-                {'name': 'bot', 'type': 'string'},
+                {'name': 'bot', 'type': 'string', 'optional': True},
                 {'name': 'owner', 'type': 'string'},
                 {'name': 'creation', 'type': 'string'},
-                {'name': 'mentions', 'type': 'string[]'}
+                {'name': 'mentions', 'type': 'string[]', 'optional': True}
         ]
     }
