@@ -10,15 +10,19 @@
  "field_order": [
   "title",
   "image",
-  "raven_bot",
-  "is_ai_bot",
-  "column_break_tsta",
   "status",
   "description",
+  "column_break_tsta",
+  "marketplace_type",
+  "product_name",
+  "is_ai_bot",
   "section_break_ftgf",
   "long_description",
+  "bot_data",
   "dependencies_section",
-  "linked_apps"
+  "linked_apps",
+  "analytics_tab",
+  "download_count"
  ],
  "fields": [
   {
@@ -33,13 +37,6 @@
    "fieldname": "image",
    "fieldtype": "Attach Image",
    "label": "Image"
-  },
-  {
-   "fieldname": "raven_bot",
-   "fieldtype": "Link",
-   "label": "Raven Bot",
-   "options": "Raven Bot",
-   "reqd": 1
   },
   {
    "default": "0",
@@ -72,7 +69,7 @@
   },
   {
    "fieldname": "long_description",
-   "fieldtype": "Text Editor",
+   "fieldtype": "HTML Editor",
    "label": "Long Description"
   },
   {
@@ -85,13 +82,42 @@
    "fieldtype": "Table",
    "label": "Linked Apps",
    "options": "Raven Marketplace Linked App"
+  },
+  {
+   "fieldname": "bot_data",
+   "fieldtype": "JSON",
+   "label": "Bot Data",
+   "reqd": 1
+  },
+  {
+   "fieldname": "marketplace_type",
+   "fieldtype": "Select",
+   "label": "Marketplace Type",
+   "options": "\nBot\nDocument Notifications\nSchedule Messages",
+   "reqd": 1
+  },
+  {
+   "fieldname": "product_name",
+   "fieldtype": "Data",
+   "label": "Product Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "analytics_tab",
+   "fieldtype": "Tab Break",
+   "label": "Analytics"
+  },
+  {
+   "fieldname": "download_count",
+   "fieldtype": "Int",
+   "label": "Download Count"
   }
  ],
  "grid_page_length": 50,
  "image_field": "image",
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-19 12:06:17.688843",
+ "modified": "2025-08-01 15:29:25.110016",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
  "name": "Raven Marketplace",

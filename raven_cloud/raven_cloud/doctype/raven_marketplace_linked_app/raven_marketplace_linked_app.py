@@ -15,6 +15,7 @@ class RavenMarketplaceLinkedApp(Document):
 		from frappe.types import DF
 
 		app_name: DF.Data
+		min_version_required: DF.Data
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
