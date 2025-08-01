@@ -3,7 +3,11 @@
 *.egg-info
 *.swp
 tags
-node_modules
+node_modules/
 __pycache__
 
 .env.local
+
+raven_cloud/public/dashboard
+raven_cloud/public/node_modules
+raven_cloud/www/dashboard.html
