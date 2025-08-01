@@ -17,6 +17,7 @@
   {
    "fieldname": "invalid_token",
    "fieldtype": "Text",
+   "in_list_view": 1,
    "label": "Invalid Token",
    "reqd": 1
   },
@@ -32,7 +33,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-04 19:03:15.829168",
+ "modified": "2025-08-01 18:18:45.127220",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
  "name": "RC Invalid Tokens",
