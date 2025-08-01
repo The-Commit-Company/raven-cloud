@@ -25,15 +25,10 @@ export const UserProvider: FC<PropsWithChildren> = ({ children }) => {
     const handleLogout = async () => {
         return logout()
             .then(() => {
-                //Reload the page so that the boot info is fetched again
-                const URL = import.meta.env.VITE_BASE_NAME ? `${import.meta.env.VITE_BASE_NAME}` : ``
-                if (URL) {
-                    window.location.replace(`/${URL}/login`)
-                } else {
-                    window.location.replace('/login')
-                }
-
-                // window.location.reload()
+                // Use window.location.replace for logout to ensure full reset
+                const baseName = import.meta.env.VITE_BASE_NAME
+                const loginPath = baseName ? `/${baseName}/login` : '/login'
+                window.location.replace(loginPath)
             })
             .catch((error) => {
                 toast.error('Failed to logout', {

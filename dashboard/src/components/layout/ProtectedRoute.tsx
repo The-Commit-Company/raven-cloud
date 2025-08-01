@@ -9,14 +9,19 @@ export const ProtectedRoute = () => {
     const { currentUser, isLoading } = useContext(UserContext)
 
     if (isLoading) {
-        return <div>Loading...</div>
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    <p className="mt-2">Loading...</p>
+                </div>
+            </div>
+        )
     }
-    else if (!currentUser || currentUser === 'Guest') {
-        // TODO: use this once we have a login page
-        // return <Navigate to="/login" replace />
-        window.location.replace('/login')
+
+    if (!currentUser || currentUser === 'Guest') {
+        return <Navigate to="/login" replace />
     }
-    return (
-        <Outlet />
-    )
+
+    return <Outlet />
 }
