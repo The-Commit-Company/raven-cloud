@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { UserContext } from '@/providers/UserProvider'
 // import { Flex, Text } from '@radix-ui/'
 // import { Stack } from '@/components/ui/stack'
@@ -20,7 +20,11 @@ export const ProtectedRoute = () => {
     }
 
     if (!currentUser || currentUser === 'Guest') {
-        return <Navigate to="/login" replace />
+        // In both dev and prod, redirect to Frappe's login page
+        // In dev: goes to localhost:8000/login (via proxy or direct)
+        // In prod: goes to domain.com/login (Frappe handles this - website settings redirect)
+        window.location.replace('/login')
+        return null
     }
 
     return <Outlet />

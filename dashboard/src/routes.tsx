@@ -4,20 +4,16 @@ import Home from "@/pages/Home"
 import { ApiKeys } from "@/pages/ApiKeys"
 import NotFound from "@/pages/NotFound"
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute"
-import { Login } from "@/pages/auth/Login"
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
-        <>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute />}>
-                <Route element={<RootLayout />}>
-                    <Route index element={<Home />} /> 
-                    <Route path="profile" element={<ApiKeys />} />
-                    <Route path="*" element={<NotFound />} />
-                </Route>
+        <Route path="/" element={<ProtectedRoute />} >
+            <Route path="/" element={<RootLayout />}>
+                <Route index element={<Home />} />
+                <Route path="profile" element={<ApiKeys />} />
+                <Route path="*" element={<NotFound />} />
             </Route>
-        </>
+        </Route>
     ),
     {
         basename: import.meta.env.VITE_BASE_NAME ? `/${import.meta.env.VITE_BASE_NAME}` : '',
