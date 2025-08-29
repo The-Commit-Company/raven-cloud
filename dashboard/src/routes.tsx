@@ -10,11 +10,12 @@ import { Marketplace } from "./pages/Marketplace"
 export const router = createBrowserRouter(
     createRoutesFromElements(
         <Route path="/" element={<ProtectedRoute />} >
-        <Route path="/" element={<RootLayout />}>
-            <Route index element={<Home />} />
-            <Route path="profile" element={<ApiKeys />} />
+            <Route path="/" element={<RootLayout />}>
+                <Route index element={<Home />} />
+                <Route path="profile" element={<ApiKeys />} />
                 <Route path="marketplace" element={<Marketplace />} />
-            <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<NotFound />} />
+            </Route>
         </Route>
     ),
     {
