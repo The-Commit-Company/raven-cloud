@@ -6,6 +6,7 @@ import NotFound from "@/pages/NotFound"
 import { ProtectedRoute } from "./components/layout/ProtectedRoute"
 import { Marketplace } from "./pages/Marketplace"
 
+
 export const router = createBrowserRouter(
     createRoutesFromElements(
         <Route path="/" element={<ProtectedRoute />} >
@@ -14,7 +15,6 @@ export const router = createBrowserRouter(
             <Route path="profile" element={<ApiKeys />} />
                 <Route path="marketplace" element={<Marketplace />} />
             <Route path="*" element={<NotFound />} />
-        </Route>
         </Route>
     ),
     {

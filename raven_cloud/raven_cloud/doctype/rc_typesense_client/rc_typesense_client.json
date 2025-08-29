@@ -1,42 +1,53 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2025-04-12 12:06:27.056159",
+ "autoname": "field:site",
+ "creation": "2025-07-16 19:57:38.794581",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "site",
-  "column_break_ewuy",
-  "invalid_token"
+  "api_key",
+  "key_id",
+  "hash"
  ],
  "fields": [
-  {
-   "fieldname": "column_break_ewuy",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "invalid_token",
-   "fieldtype": "Text",
-   "in_list_view": 1,
-   "label": "Invalid Token",
-   "reqd": 1
-  },
   {
    "fieldname": "site",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Site",
    "options": "RC Site",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Data",
+   "label": "API Key",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hash",
+   "fieldtype": "Data",
+   "label": "Hash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "key_id",
+   "fieldtype": "Data",
+   "label": "Key ID",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-01 18:18:45.127220",
+ "modified": "2025-07-18 14:47:50.891290",
  "modified_by": "Administrator",
  "module": "Raven Cloud",
- "name": "RC Invalid Tokens",
+ "name": "RC Typesense Client",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -50,23 +61,11 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "if_owner": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Raven Cloud User",
-   "share": 1,
-   "write": 1
   }
  ],
  "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "site"
 }

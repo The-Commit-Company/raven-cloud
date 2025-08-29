@@ -1,28 +1,35 @@
-import frappe
-from frappe.utils.response import Response
-import firebase_admin
-from firebase_admin import messaging
 import json
+
+import firebase_admin
+import frappe
+from firebase_admin import messaging
+from frappe.utils.response import Response
+
 from raven_cloud.utils.fcm import get_app
+from raven_cloud.utils.notification import sanitize_fcm_data
 from raven_cloud.utils.rc_caching import get_push_tokens_for_user
+
 
 @frappe.whitelist()
 def register_site(site_name: str):
-    frappe.only_for("Raven Cloud User")
+    frappe.only_for('Raven Cloud User')
 
     # Check if the site is already registered
-    if not frappe.db.exists("RC Site", {"site": site_name}):
-        frappe.get_doc({
-            "doctype": "RC Site",
-            "site": site_name,
-        }).insert()
+    if not frappe.db.exists('RC Site', {'site': site_name}):
+        frappe.get_doc(
+            {
+                'doctype': 'RC Site',
+                'site': site_name,
+            }
+        ).insert()
 
-    fcm_settings = frappe.get_doc("RC FCM Settings")
+    fcm_settings = frappe.get_doc('RC FCM Settings')
 
     return {
-		"config": fcm_settings.firebase_client_configuration,
-		"vapid_public_key": fcm_settings.vapid_public_key,
-	}
+        'config': fcm_settings.firebase_client_configuration,
+        'vapid_public_key': fcm_settings.vapid_public_key,
+    }
+
 
 @frappe.whitelist()
 def send(messages, site_name: str):
@@ -31,11 +38,11 @@ def send(messages, site_name: str):
     Before enqueuing the job, it checks if the user has the necessary permissions to send notifications.
     """
 
-    frappe.only_for("Raven Cloud User")
+    frappe.only_for('Raven Cloud User')
 
     # check if the site exists in RC Site
-    if not frappe.db.exists("RC Site", site_name):
-        frappe.throw("Site not created for the user")
+    if not frappe.db.exists('RC Site', site_name):
+        frappe.throw('Site not created for the user')
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -45,11 +52,12 @@ def send(messages, site_name: str):
         _send,
         messages=messages,
         site_url=site_name,
-        queue="short",
+        queue='short',
     )
 
     # TODO: Return the response from api itself.
     return
+
 
 def _send(messages, site_url: str):
     """
@@ -79,48 +87,47 @@ def _send(messages, site_url: str):
             android = None
             apns = None
 
-            if message.get("notification"):
+            if message.get('notification'):
                 notification = messaging.Notification(
-                    title=message["notification"]["title"],
-                    body=message["notification"]["body"],
-                    image=message.get("image", None),
+                    title=message['notification']['title'],
+                    body=message['notification']['body'],
+                    image=message.get('image', None),
                 )
 
-                if message.get("click_action"):
-                    if message.get("click_action").startswith("https://"):
+                if message.get('click_action'):
+                    if message.get('click_action').startswith('https://'):
                         webpush = messaging.WebpushConfig(
                             fcm_options=messaging.WebpushFCMOptions(
-                                link=message.get("click_action", None),
+                                link=message.get('click_action', None),
                             )
                         )
-            
-                if message.get("tag") or message.get("image"):
+
+                if message.get('tag') or message.get('image'):
                     android = messaging.AndroidConfig(
                         notification=messaging.AndroidNotification(
-                            tag=message.get("tag", None),
-                            image=message.get("image", None),
-                            priority="high",
-                            sound="default",
+                            tag=message.get('tag', None),
+                            image=message.get('image', None),
+                            priority='high',
+                            sound='default',
                         ),
                     )
-            
+
                 apns = messaging.APNSConfig(
                     fcm_options=messaging.APNSFCMOptions(
-                        image=message.get("image", None),
+                        image=message.get('image', None),
                     ),
                     payload=messaging.APNSPayload(
                         aps=messaging.Aps(
                             content_available=True,
-                            sound="default",
+                            sound='default',
                         ),
                     ),
-                )    
+                )
 
-            if message.get("data"):
-                data = message["data"]
+            if message.get('data'):
+                data = sanitize_fcm_data(message['data'])
 
-            for token in message.get("tokens", []):
-
+            for token in message.get('tokens', []):
                 fcm_message = messaging.Message(
                     token=token,
                     notification=notification,
@@ -150,34 +157,40 @@ def _send(messages, site_url: str):
             # store the failed/invalid tokens in RC Invalid Tokens doctype
             for token in failed_tokens:
                 # check if the token is already in the RC Invalid Tokens doctype for the same site - if not then insert it
-                if not frappe.db.exists("RC Invalid Tokens", {"site": site_url, "invalid_token": token}):
-                    frappe.get_doc({
-                        "doctype": "RC Invalid Tokens",
-                        "site": site_url,
-                        "invalid_token": token,
-                    }).insert()
+                if not frappe.db.exists('RC Invalid Tokens', {'site': site_url, 'invalid_token': token}):
+                    frappe.get_doc(
+                        {
+                            'doctype': 'RC Invalid Tokens',
+                            'site': site_url,
+                            'invalid_token': token,
+                        }
+                    ).insert()
         else:
             success_tokens = all_tokens
 
         # store the response in RC Push Notification Log
-        frappe.get_doc({
-            "doctype": "RC Push Notification Log",
-            "user": frappe.session.user,
-            "site": site_url,
-            "number_of_messages": len(messages),
-            "number_of_tokens": len(all_tokens),
-            "success_tokens": len(success_tokens),
-            "failed_tokens": len(failed_tokens),
-        }).insert()
+        frappe.get_doc(
+            {
+                'doctype': 'RC Push Notification Log',
+                'user': frappe.session.user,
+                'site': site_url,
+                'number_of_messages': len(messages),
+                'number_of_tokens': len(all_tokens),
+                'success_tokens': len(success_tokens),
+                'failed_tokens': len(failed_tokens),
+            }
+        ).insert()
 
     except Exception as e:
-        frappe.get_doc({
-            "doctype": "RC Push Notification Error Log",
-            "user": frappe.session.user,
-            "site": site_url,
-            "error_traceback": frappe.get_traceback(e),
-            "error_response": json.dumps(messages),
-        }).insert()
+        frappe.get_doc(
+            {
+                'doctype': 'RC Push Notification Error Log',
+                'user': frappe.session.user,
+                'site': site_url,
+                'error_traceback': frappe.get_traceback(e),
+                'error_response': json.dumps(messages),
+            }
+        ).insert()
 
 @frappe.whitelist()
 def send_to_users(messages, site_name: str):
@@ -185,30 +198,26 @@ def send_to_users(messages, site_name: str):
     Send messages to users via FCM.
     Users is a list of user ids (Raven User ids)
     """
-    frappe.only_for("Raven Cloud User")
+    frappe.only_for('Raven Cloud User')
 
     # check if the site exists
-    if not frappe.db.exists("RC Site", site_name):
-        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+    if not frappe.db.exists('RC Site', site_name):
+        frappe.throw('Site not registered on Raven Cloud, please ask your System Manager to register the site.')
 
     if isinstance(messages, str):
         messages = json.loads(messages)
 
     # enqueue the job of sending notifications
-    frappe.enqueue(
-        _send_to_users,
-        messages=messages,
-        site_url=site_name,
-        queue="short",
-    )
+    frappe.enqueue(_send_to_users, messages=messages, site_url=site_name, queue='short')
 
     # TODO: Return the response from api itself.
     return
 
+
 def _send_to_users(messages, site_url: str):
     """
     Send messages to users via FCM
-    
+
     - Messages is a list of messages to send to the users
     Each message is a dictionary with the following keys:
         - users: list(str)
@@ -223,16 +232,20 @@ def _send_to_users(messages, site_url: str):
     app = get_app()
 
     fcm_messages = []
+    # Track ALL tokens for response processing
+    all_tokens = []
     try:
         for message in messages:
-
-            # get the push tokens for the users
-            all_tokens = []
+            # get tokens for this message only
+            message_tokens = []
             for user in message.get("users", []):
-                all_tokens.extend(get_push_tokens_for_user(user, site_url))
-            
-            if not all_tokens:
+                message_tokens.extend(get_push_tokens_for_user(user, site_url))
+
+            if not message_tokens:
                 continue
+
+            # add this message's tokens to the global list - to keep track of the count of tokens
+            all_tokens.extend(message_tokens)
 
             notification = None
             data = None
@@ -278,9 +291,10 @@ def _send_to_users(messages, site_url: str):
                 )
             
             if message.get("data"):
-                data = message["data"]
+                data = sanitize_fcm_data(message['data'])
 
-            for token in all_tokens:
+            # create FCM messages for THIS message's tokens only
+            for token in message_tokens:
                 fcm_message = messaging.Message(
                     token=token,
                     notification=notification,
@@ -296,7 +310,6 @@ def _send_to_users(messages, site_url: str):
 
         # send notifications via fcm in a batch
         response = messaging.send_each(fcm_messages, app=app)
-        
 
         failed_tokens = []
         success_tokens = []
@@ -615,3 +628,75 @@ def bulk_create_site_user_and_token(site_name: str, users: list[dict]):
     return {
         "status": "success",
     }
+
+@frappe.whitelist(methods=["POST"])
+def sync_invalid_tokens(site_name: str, batch_size: int = 10):
+    """
+    Sync Invalid Tokens is called by the client site(raven client) by sending in site name and batch size.
+    We then fetch the invalid tokens from the RC Invalid tokens and send it to the client site.
+    Meanwhile we delete the invalid tokens from the RC Invalid tokens.
+
+    The client site will then delete the invalid tokens from the local database and send the token ids to the server.
+    We then delete the invalid tokens from the RC Invalid tokens.
+    This is done in batches. We send has_more flag to client site to let them know that there are more invalid tokens to be deleted.
+    Until has_more is True, the client site will keep calling this API.
+
+    This is a way to ensure that the invalid tokens are deleted from the RC Invalid tokens and the client site.
+
+    """
+    frappe.only_for("Raven Cloud User")
+    check_if_site_exists(site_name, throw=True)
+
+    # Get count first to determine has_more
+    total_count = frappe.db.count("RC Invalid Tokens", filters={"site": site_name})
+    
+    # If there are no invalid tokens, we return an empty list with has_more as False.
+    if not total_count:
+        return {
+            "invalid_tokens": [],
+            "has_more": False,
+            "processed_count": 0,
+            "total_remaining": 0
+        }
+
+    # Fetch the batch of invalid tokens
+    invalid_tokens = frappe.db.get_list(
+        "RC Invalid Tokens",
+        filters={"site": site_name},
+        fields=["invalid_token", "name"],
+        order_by="creation asc",
+        start=0,
+        page_length=batch_size,
+    )
+
+    if not invalid_tokens:
+        return {
+            "invalid_tokens": [],
+            "has_more": False,
+            "processed_count": 0,
+            "total_remaining": 0
+        }
+
+    token_ids = [token.get("name") for token in invalid_tokens]
+    
+    try:
+        # Delete the invalid tokens from the RC Invalid tokens
+        frappe.db.delete("RC Invalid Tokens", {"name": ("in", token_ids)})
+        
+        # Calculate the remaining count and has_more flag
+        remaining_count = total_count - len(invalid_tokens)
+        has_more = remaining_count > 0
+
+        return {
+            "invalid_tokens": invalid_tokens,
+            "has_more": has_more,
+            "processed_count": len(invalid_tokens),
+            "total_remaining": remaining_count
+        }
+        
+    except Exception as e:
+        frappe.log_error(
+            title=f"Error in sync_invalid_tokens for {site_name}", 
+            message=frappe.get_traceback()
+        )
+        frappe.throw(f"Failed to sync invalid tokens: {str(e)}")

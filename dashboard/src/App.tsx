@@ -16,6 +16,7 @@ function App() {
 			return window.frappe?.boot?.sitename ?? import.meta.env.VITE_SITE_NAME
 		}
 	}
+
 	return (
 		<FrappeProvider
 			url={import.meta.env.VITE_FRAPPE_PATH ?? ''}
