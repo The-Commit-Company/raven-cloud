@@ -22,8 +22,7 @@ class RavenMarketplace(Document):
 		is_ai_bot: DF.Check
 		linked_apps: DF.Table[RavenMarketplaceLinkedApp]
 		long_description: DF.HTMLEditor | None
-		marketplace_type: DF.Literal["", "Bot",
-                               "Document Notifications", "Schedule Messages"]
+		marketplace_type: DF.Literal["", "Bot", "Document Notifications", "Schedule Messages"]
 		product_name: DF.Data
 		status: DF.Literal["Draft", "Published", "In Review", "Attention Required", "Rejected", "Disabled"]
 		title: DF.Data

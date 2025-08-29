@@ -26,6 +26,11 @@ const items = [
         url: "/profile",
         icon: KeyRound,
     },
+    {
+        title: "Marketplace",
+        url: "/marketplace",
+        icon: Store,
+    }
 ]
 
 const comingSoonItems = [
@@ -33,11 +38,6 @@ const comingSoonItems = [
         title: "Typesense Search",
         url: "/search",
         icon: Search,
-    },
-    {
-        title: "Marketplace",
-        url: "/marketplace",
-        icon: Store,
     },
     {
         title: "Video Calling",
