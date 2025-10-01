@@ -425,6 +425,12 @@ def create_user_token(site_name: str, user_id: str, token: str):
         }).insert()
 
     else:
+        # deduping - add a check to see if the token already exists
+        if frappe.db.exists("RC Site User Token", {"user": site_user, "fcm_token": token}):
+            return {
+                "status": "success",
+            }
+
         # store the token in the RC Site User doctype
         frappe.get_doc({
             "doctype": "RC Site User Token",
@@ -628,3 +634,75 @@ def bulk_create_site_user_and_token(site_name: str, users: list[dict]):
     return {
         "status": "success",
     }
+
+@frappe.whitelist(methods=["POST"])
+def sync_invalid_tokens(site_name: str, batch_size: int = 10):
+    """
+    Sync Invalid Tokens is called by the client site(raven client) by sending in site name and batch size.
+    We then fetch the invalid tokens from the RC Invalid tokens and send it to the client site.
+    Meanwhile we delete the invalid tokens from the RC Invalid tokens.
+
+    The client site will then delete the invalid tokens from the local database and send the token ids to the server.
+    We then delete the invalid tokens from the RC Invalid tokens.
+    This is done in batches. We send has_more flag to client site to let them know that there are more invalid tokens to be deleted.
+    Until has_more is True, the client site will keep calling this API.
+
+    This is a way to ensure that the invalid tokens are deleted from the RC Invalid tokens and the client site.
+
+    """
+    frappe.only_for("Raven Cloud User")
+    check_if_site_exists(site_name, throw=True)
+
+    # Get count first to determine has_more
+    total_count = frappe.db.count("RC Invalid Tokens", filters={"site": site_name})
+    
+    # If there are no invalid tokens, we return an empty list with has_more as False.
+    if not total_count:
+        return {
+            "invalid_tokens": [],
+            "has_more": False,
+            "processed_count": 0,
+            "total_remaining": 0
+        }
+
+    # Fetch the batch of invalid tokens
+    invalid_tokens = frappe.db.get_list(
+        "RC Invalid Tokens",
+        filters={"site": site_name},
+        fields=["invalid_token", "name"],
+        order_by="creation asc",
+        start=0,
+        page_length=batch_size,
+    )
+
+    if not invalid_tokens:
+        return {
+            "invalid_tokens": [],
+            "has_more": False,
+            "processed_count": 0,
+            "total_remaining": 0
+        }
+
+    token_ids = [token.get("name") for token in invalid_tokens]
+    
+    try:
+        # Delete the invalid tokens from the RC Invalid tokens
+        frappe.db.delete("RC Invalid Tokens", {"name": ("in", token_ids)})
+        
+        # Calculate the remaining count and has_more flag
+        remaining_count = total_count - len(invalid_tokens)
+        has_more = remaining_count > 0
+
+        return {
+            "invalid_tokens": invalid_tokens,
+            "has_more": has_more,
+            "processed_count": len(invalid_tokens),
+            "total_remaining": remaining_count
+        }
+        
+    except Exception as e:
+        frappe.log_error(
+            title=f"Error in sync_invalid_tokens for {site_name}", 
+            message=frappe.get_traceback()
+        )
+        frappe.throw(f"Failed to sync invalid tokens: {str(e)}")

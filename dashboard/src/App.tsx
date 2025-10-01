@@ -5,6 +5,7 @@ import { Toaster } from 'sonner'
 import { router } from '@/routes'
 
 function App() {
+
 	return (
 		<FrappeProvider>
 			<UserProvider>
