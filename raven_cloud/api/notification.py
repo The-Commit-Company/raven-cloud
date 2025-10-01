@@ -425,6 +425,12 @@ def create_user_token(site_name: str, user_id: str, token: str):
         }).insert()
 
     else:
+        # deduping - add a check to see if the token already exists
+        if frappe.db.exists("RC Site User Token", {"user": site_user, "fcm_token": token}):
+            return {
+                "status": "success",
+            }
+
         # store the token in the RC Site User doctype
         frappe.get_doc({
             "doctype": "RC Site User Token",
