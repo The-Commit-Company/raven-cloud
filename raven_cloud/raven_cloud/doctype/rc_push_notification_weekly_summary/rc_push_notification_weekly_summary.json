@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{site}-{week_start_date}",
+ "creation": "2025-11-21 10:45:21.212258",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "general_section",
+  "site",
+  "week_start_date",
+  "column_break_hjqn",
+  "week_end_date",
+  "aggregated_on",
+  "usage_stats_section",
+  "total_messages",
+  "total_success_tokens",
+  "logs_processed",
+  "column_break_osfw",
+  "total_tokens",
+  "total_failed_tokens"
+ ],
+ "fields": [
+  {
+   "fieldname": "general_section",
+   "fieldtype": "Section Break",
+   "label": "General"
+  },
+  {
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "label": "Site",
+   "options": "RC Site"
+  },
+  {
+   "fieldname": "week_start_date",
+   "fieldtype": "Date",
+   "label": "Week Start Date"
+  },
+  {
+   "fieldname": "column_break_hjqn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "week_end_date",
+   "fieldtype": "Date",
+   "label": "Week End Date"
+  },
+  {
+   "fieldname": "aggregated_on",
+   "fieldtype": "Datetime",
+   "label": "Aggregated On"
+  },
+  {
+   "fieldname": "usage_stats_section",
+   "fieldtype": "Section Break",
+   "label": "Usage Stats"
+  },
+  {
+   "fieldname": "total_messages",
+   "fieldtype": "Int",
+   "label": "Total Messages"
+  },
+  {
+   "fieldname": "total_success_tokens",
+   "fieldtype": "Int",
+   "label": "Total Success Tokens"
+  },
+  {
+   "fieldname": "logs_processed",
+   "fieldtype": "Int",
+   "label": "Logs Processed"
+  },
+  {
+   "fieldname": "column_break_osfw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_tokens",
+   "fieldtype": "Int",
+   "label": "Total Tokens"
+  },
+  {
+   "fieldname": "total_failed_tokens",
+   "fieldtype": "Int",
+   "label": "Total Failed Tokens"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-11-21 10:53:57.296480",
+ "modified_by": "Administrator",
+ "module": "Raven Cloud",
+ "name": "RC Push Notification Weekly Summary",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
