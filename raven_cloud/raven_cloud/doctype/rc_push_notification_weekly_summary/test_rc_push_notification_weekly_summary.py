@@ -1,0 +1,30 @@
+# Copyright (c) 2025, The Commit Company (Algocode Technologies Private Limited) and Contributors
+# See license.txt
+
+# import frappe
+from frappe.tests import IntegrationTestCase, UnitTestCase
+
+
+# On IntegrationTestCase, the doctype test records and all
+# link-field test record dependencies are recursively loaded
+# Use these module variables to add/remove to/from that list
+EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
+IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
+
+
+class UnitTestRCPushNotificationWeeklySummary(UnitTestCase):
+	"""
+	Unit tests for RCPushNotificationWeeklySummary.
+	Use this class for testing individual functions and methods.
+	"""
+
+	pass
+
+
+class IntegrationTestRCPushNotificationWeeklySummary(IntegrationTestCase):
+	"""
+	Integration tests for RCPushNotificationWeeklySummary.
+	Use this class for testing interactions between multiple components.
+	"""
+
+	pass
