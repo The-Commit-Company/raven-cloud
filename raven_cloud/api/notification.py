@@ -231,7 +231,7 @@ def _send_to_users(messages, site_url: str):
     """
     app = get_app()
     frappe.log_error(
-        title="Raven Cloud Debug Log - _send_to_users",
+        title=f"Raven Cloud Debug Log - _send_to_users - {site_url}",
         message=f"Sending messages to users: {messages} for site: {site_url}",
     )
 
@@ -243,10 +243,6 @@ def _send_to_users(messages, site_url: str):
             # get tokens for this message only
             message_tokens = []
             for user in message.get("users", []):
-                frappe.log_error(
-                    title="Raven Cloud Debug Log - _send_to_users - getting push tokens",
-                    message=f"Getting push tokens for user: {user} for site: {site_url}",
-                )
                 message_tokens.extend(get_push_tokens_for_user(user, site_url))
 
             if not message_tokens:
