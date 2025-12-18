@@ -230,10 +230,6 @@ def _send_to_users(messages, site_url: str):
         - click_action(optional): str - action to perform when the user clicks the notification - web only
     """
     app = get_app()
-    frappe.log_error(
-        title=f"Raven Cloud Debug Log - _send_to_users - {site_url}",
-        message=f"Sending messages to users: {messages} for site: {site_url}",
-    )
 
     fcm_messages = []
     # Track ALL tokens for response processing
