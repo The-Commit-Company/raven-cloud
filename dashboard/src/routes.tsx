@@ -3,7 +3,9 @@ import RootLayout from "@/components/layout/RootLayout"
 import Home from "@/pages/Home"
 import { ApiKeys } from "@/pages/ApiKeys"
 import NotFound from "@/pages/NotFound"
-import { ProtectedRoute } from "@/components/layout/ProtectedRoute"
+import { ProtectedRoute } from "./components/layout/ProtectedRoute"
+import { Marketplace } from "./pages/Marketplace"
+
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -11,6 +13,7 @@ export const router = createBrowserRouter(
             <Route path="/" element={<RootLayout />}>
                 <Route index element={<Home />} />
                 <Route path="profile" element={<ApiKeys />} />
+                <Route path="marketplace" element={<Marketplace />} />
                 <Route path="*" element={<NotFound />} />
             </Route>
         </Route>

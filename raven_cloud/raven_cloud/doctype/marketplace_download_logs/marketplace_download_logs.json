@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-01 12:43:28.622089",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "marketplace_name",
+  "marketplace_type",
+  "product_name",
+  "status",
+  "column_break_fkos",
+  "site_name",
+  "requested_by_user",
+  "requested_by_user_name",
+  "timezone",
+  "downloaded_at",
+  "user"
+ ],
+ "fields": [
+  {
+   "fieldname": "marketplace_name",
+   "fieldtype": "Link",
+   "label": "Marketplace Name",
+   "options": "Raven Marketplace",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "marketplace_name.marketplace_type",
+   "fieldname": "marketplace_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Marketplace Type",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "marketplace_name.product_name",
+   "fieldname": "product_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Product Name",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nPending\nSuccess\nFailed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_fkos",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "site_name",
+   "fieldtype": "Link",
+   "label": "Site Name",
+   "options": "RC Site",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requested_by_user",
+   "fieldtype": "Data",
+   "label": "Requested by User",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "requested_by_user_name",
+   "fieldtype": "Data",
+   "label": "Requested By User Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "timezone",
+   "fieldtype": "Data",
+   "label": "Timezone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "downloaded_at",
+   "fieldtype": "Datetime",
+   "label": "Downloaded At",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-01 14:20:11.417048",
+ "modified_by": "Administrator",
+ "module": "Raven Cloud",
+ "name": "Marketplace Download Logs",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
