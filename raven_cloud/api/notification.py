@@ -91,7 +91,7 @@ def _send(messages, site_url: str):
                 notification = messaging.Notification(
                     title=message['notification']['title'],
                     body=message['notification']['body'],
-                    image=message.get('image', None),
+                    # image=message.get('image', None),
                 )
 
                 if message.get('click_action'):
@@ -257,7 +257,7 @@ def _send_to_users(messages, site_url: str):
                 notification = messaging.Notification(
                     title=message["notification"]["title"],
                     body=message["notification"]["body"],
-                    image=message.get("image", None),
+                    # image=message.get("image", None),
                 )
 
                 if message.get("click_action"):
