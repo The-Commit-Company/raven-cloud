@@ -101,12 +101,12 @@ def _send(messages, site_url: str):
                                 link=message.get('click_action', None),
                             )
                         )
-
+                # temp? don't send image to android for now
                 if message.get('tag') or message.get('image'):
                     android = messaging.AndroidConfig(
                         notification=messaging.AndroidNotification(
                             tag=message.get('tag', None),
-                            image=message.get('image', None),
+                            # image=message.get('image', None),
                             priority='high',
                             sound='default',
                         ),
@@ -267,17 +267,17 @@ def _send_to_users(messages, site_url: str):
                                 link=message.get("click_action", None),
                             )
                         )
-            
+
                 if message.get("tag") or message.get("image"):
                     android = messaging.AndroidConfig(
                         notification=messaging.AndroidNotification(
                             tag=message.get("tag", None),
-                            image=message.get("image", None),
+                            # image=message.get("image", None),
                             priority="high",
                             sound="default",
                         ),
                     )
-            
+
                 apns = messaging.APNSConfig(
                     fcm_options=messaging.APNSFCMOptions(
                         image=message.get("image", None),
@@ -289,7 +289,7 @@ def _send_to_users(messages, site_url: str):
                         ),
                     ),
                 )
-            
+
             if message.get("data"):
                 data = sanitize_fcm_data(message['data'])
 
@@ -400,7 +400,7 @@ def get_site_user(site_name: str, user_id: str):
 def create_user_token(site_name: str, user_id: str, token: str):
     """
         This api would be used as a sync api between raven cloud and the raven client app.
-        
+
     """
     # check if the site exists
     check_if_site_exists(site_name)
@@ -470,18 +470,18 @@ def import_user_tokens(site_name: str, tokens):
                 }).insert().name
 
             user_map[token.get("user")] = user
-        
+
 
         if frappe.db.exists("RC Site User Token", {"user": user_map[token.get("user")], "fcm_token": token.get("fcm_token")}):
             continue
 
-        
+
         frappe.get_doc({
             "doctype": "RC Site User Token",
             "user": user_map[token.get("user")],
             "fcm_token": token.get("fcm_token"),
         }).insert()
-    
+
     return {
         "status": "success",
     }
@@ -499,7 +499,7 @@ def delete_user_token(site_name: str, user_id: str, token: str):
 
     if not id:
         return
-    
+
     doc = frappe.get_doc("RC Site User Token", id)
     doc.delete()
 
@@ -525,11 +525,11 @@ def create_site_channel(channel_id: str, site_name: str):
                 "site": site,
                 "channel_id": channel_id,
             }).insert()
-    
+
     except Exception as e:
         frappe.log_error(title=f"Error creating site channel for {channel_id} of {site_name}", message=frappe.get_traceback())
         frappe.throw(f"Error creating site channel for {channel_id} of {site_name} - {str(e)}")
-    
+
     return {
         "status": "success",
     }
@@ -548,7 +548,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
 
     if not site:
         frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
-    
+
     try:
         channel = frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id})
 
@@ -558,7 +558,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
                 "site": site,
                 "channel_id": channel_id,
             }).insert()
-        
+
         # check if the user exists
         user = frappe.db.exists("RC Site User", {"site": site, "user_id": user_id})
 
@@ -576,7 +576,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
                 "user": user,
                 "channel": channel,
             }).insert()
-    
+
     except Exception as e:
         frappe.log_error(title=f"Error subscribing to site channel for {user_id} of {site_name}", message=frappe.get_traceback())
         frappe.throw(f"Error subscribing to site channel for {user_id} of {site_name} - {str(e)}")
@@ -597,7 +597,7 @@ def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str)
 
     if not site:
         frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
-    
+
     # channel subscription only exists if the channel and user exists, so we don't need to check for the existence of the channel and user
     channel = frappe.db.get_value("RC Site Channel", {"site": site, "channel_id": channel_id}, ["name"])
     user = frappe.db.get_value("RC Site User", {"site": site, "user_id": user_id}, ["name"])
@@ -612,12 +612,12 @@ def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str)
 def bulk_create_site_user_and_token(site_name: str, users: list[dict]):
     """
     Bulk create site user and token for the given site and users.
-    
+
     users is a list of dictionaries with the following keys:
         - user_id: str
         - token: str
     """
-    
+
     error_messages = []
 
     for user in users:
@@ -655,7 +655,7 @@ def sync_invalid_tokens(site_name: str, batch_size: int = 10):
 
     # Get count first to determine has_more
     total_count = frappe.db.count("RC Invalid Tokens", filters={"site": site_name})
-    
+
     # If there are no invalid tokens, we return an empty list with has_more as False.
     if not total_count:
         return {
@@ -684,11 +684,11 @@ def sync_invalid_tokens(site_name: str, batch_size: int = 10):
         }
 
     token_ids = [token.get("name") for token in invalid_tokens]
-    
+
     try:
         # Delete the invalid tokens from the RC Invalid tokens
         frappe.db.delete("RC Invalid Tokens", {"name": ("in", token_ids)})
-        
+
         # Calculate the remaining count and has_more flag
         remaining_count = total_count - len(invalid_tokens)
         has_more = remaining_count > 0
@@ -699,10 +699,10 @@ def sync_invalid_tokens(site_name: str, batch_size: int = 10):
             "processed_count": len(invalid_tokens),
             "total_remaining": remaining_count
         }
-        
+
     except Exception as e:
         frappe.log_error(
-            title=f"Error in sync_invalid_tokens for {site_name}", 
+            title=f"Error in sync_invalid_tokens for {site_name}",
             message=frappe.get_traceback()
         )
         frappe.throw(f"Failed to sync invalid tokens: {str(e)}")
