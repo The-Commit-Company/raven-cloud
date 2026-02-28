@@ -3,6 +3,7 @@ import json
 import firebase_admin
 import frappe
 from firebase_admin import messaging
+from frappe import _
 from frappe.utils.response import Response
 
 from raven_cloud.utils.fcm import get_app
@@ -42,7 +43,7 @@ def send(messages, site_name: str):
 
     # check if the site exists in RC Site
     if not frappe.db.exists('RC Site', site_name):
-        frappe.throw('Site not created for the user')
+        frappe.throw(_("Site not created for the user"))
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -202,7 +203,7 @@ def send_to_users(messages, site_name: str):
 
     # check if the site exists
     if not frappe.db.exists('RC Site', site_name):
-        frappe.throw('Site not registered on Raven Cloud, please ask your System Manager to register the site.')
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -385,7 +386,7 @@ def check_if_site_exists(site_name: str, throw: bool = True):
     """
     if not frappe.db.exists("RC Site", site_name):
         if throw:
-            frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+            frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
         else:
             return False
     return True
@@ -514,7 +515,7 @@ def create_site_channel(channel_id: str, site_name: str):
     site = frappe.db.exists("RC Site", site_name)
 
     if not site:
-        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
 
     try:
 
@@ -528,7 +529,7 @@ def create_site_channel(channel_id: str, site_name: str):
 
     except Exception as e:
         frappe.log_error(title=f"Error creating site channel for {channel_id} of {site_name}", message=frappe.get_traceback())
-        frappe.throw(f"Error creating site channel for {channel_id} of {site_name} - {str(e)}")
+        frappe.throw(_(f"Error creating site channel for {channel_id} of {site_name} - {str(e)}"))
 
     return {
         "status": "success",
@@ -547,7 +548,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
     site = frappe.db.exists("RC Site", site_name)
 
     if not site:
-        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
 
     try:
         channel = frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id})
@@ -579,7 +580,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
 
     except Exception as e:
         frappe.log_error(title=f"Error subscribing to site channel for {user_id} of {site_name}", message=frappe.get_traceback())
-        frappe.throw(f"Error subscribing to site channel for {user_id} of {site_name} - {str(e)}")
+        frappe.throw(_(f"Error subscribing to site channel for {user_id} of {site_name} - {str(e)}"))
 
     return {
         "status": "success",
@@ -596,7 +597,7 @@ def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str)
     site = frappe.db.exists("RC Site", site_name)
 
     if not site:
-        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
 
     # channel subscription only exists if the channel and user exists, so we don't need to check for the existence of the channel and user
     channel = frappe.db.get_value("RC Site Channel", {"site": site, "channel_id": channel_id}, ["name"])
@@ -629,7 +630,7 @@ def bulk_create_site_user_and_token(site_name: str, users: list[dict]):
             frappe.log_error(title=error_message, message=frappe.get_traceback())
 
     if error_messages:
-        frappe.throw(f"Failed to create some site users and tokens: {'; '.join(error_messages)}")
+        frappe.throw(_(f"Failed to create some site users and tokens: {'; '.join(error_messages)}"))
 
     return {
         "status": "success",
@@ -705,4 +706,4 @@ def sync_invalid_tokens(site_name: str, batch_size: int = 10):
             title=f"Error in sync_invalid_tokens for {site_name}",
             message=frappe.get_traceback()
         )
-        frappe.throw(f"Failed to sync invalid tokens: {str(e)}")
+        frappe.throw(_(f"Failed to sync invalid tokens: {str(e)}"))
