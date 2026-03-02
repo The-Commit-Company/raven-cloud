@@ -11,7 +11,7 @@ from raven_cloud.utils.notification import sanitize_fcm_data
 from raven_cloud.utils.rc_caching import get_push_tokens_for_user
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def register_site(site_name: str):
     frappe.only_for('Raven Cloud User')
 
@@ -32,7 +32,7 @@ def register_site(site_name: str):
     }
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def send(messages, site_name: str):
     """
     API which is a wrapper around the _send function. It takes in the messages and enqueues a background job to send the messages to tokens via FCM.
@@ -44,6 +44,13 @@ def send(messages, site_name: str):
     # check if the site exists in RC Site
     if not frappe.db.exists('RC Site', site_name):
         frappe.throw(_("Site not created for the user"))
+
+    roles = frappe.get_roles()
+    if "System Manager" not in roles or "Administrator" not in roles:
+        # check if user has permission to send notifications to this site
+        if not frappe.db.exists('RC Site User', {'site': site_name, 'user_id': frappe.session.user}):
+            frappe.throw(_("You do not have permission to send notifications to this site."))
+
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -193,7 +200,7 @@ def _send(messages, site_url: str):
             }
         ).insert()
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def send_to_users(messages, site_name: str):
     """
     Send messages to users via FCM.
@@ -204,6 +211,12 @@ def send_to_users(messages, site_name: str):
     # check if the site exists
     if not frappe.db.exists('RC Site', site_name):
         frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
+
+    roles = frappe.get_roles()
+    if "System Manager" not in roles or "Administrator" not in roles:
+        # check if user has permission to send notifications to this site
+        if not frappe.db.exists('RC Site User', {'site': site_name, 'user_id': frappe.session.user}):
+            frappe.throw(_("You do not have permission to send notifications to this site."))
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -535,7 +548,7 @@ def create_site_channel(channel_id: str, site_name: str):
         "status": "success",
     }
 
-@frappe.whitelist(methods=["POST"])
+# @frappe.whitelist(methods=["POST"])
 def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
     """
     API for channel/topic based subscription.
@@ -586,7 +599,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
         "status": "success",
     }
 
-@frappe.whitelist(methods=["POST"])
+# @frappe.whitelist(methods=["POST"])
 def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str):
     """
     API for channel/topic based unsubscription.
@@ -609,7 +622,7 @@ def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str)
         "status": "success",
     }
 
-@frappe.whitelist(methods=["POST"])
+# @frappe.whitelist(methods=["POST"])
 def bulk_create_site_user_and_token(site_name: str, users: list[dict]):
     """
     Bulk create site user and token for the given site and users.
