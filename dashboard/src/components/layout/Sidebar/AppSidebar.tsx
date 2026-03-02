@@ -28,23 +28,24 @@ const items = [
     },
 ]
 
-const comingSoonItems = [
-    {
-        title: "Typesense Search",
-        url: "/search",
-        icon: Search,
-    },
-    {
-        title: "Marketplace",
-        url: "/marketplace",
-        icon: Store,
-    },
-    {
-        title: "Video Calling",
-        url: "/video-calling",
-        icon: Video,
-    }
-]
+// *NOTE: temporarily commented out as this is not currently in upcoming plans (as of 02-03-2026)
+// const comingSoonItems = [
+//     {
+//         title: "Typesense Search",
+//         url: "/search",
+//         icon: Search,
+//     },
+//     {
+//         title: "Marketplace",
+//         url: "/marketplace",
+//         icon: Store,
+//     },
+//     {
+//         title: "Video Calling",
+//         url: "/video-calling",
+//         icon: Video,
+//     }
+// ]
 
 export function AppSidebar() {
     return (
@@ -68,27 +69,7 @@ export function AppSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Coming Soon</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {comingSoonItems.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild disabled>
-                                        {/* <Link to={item.url}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </Link> */}
-                                        <div className="flex items-center gap-2 cursor-not-allowed">
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </div>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+
             </SidebarContent>
             <SidebarFooter>
                 <NavUser />
