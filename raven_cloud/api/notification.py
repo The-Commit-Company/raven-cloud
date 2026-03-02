@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import firebase_admin
 import frappe
@@ -10,6 +11,8 @@ from raven_cloud.utils.fcm import get_app
 from raven_cloud.utils.notification import sanitize_fcm_data
 from raven_cloud.utils.rc_caching import get_push_tokens_for_user
 
+Message = dict[str, Any]
+Messages = list[Message]
 
 @frappe.whitelist(methods=["POST"])
 def register_site(site_name: str):
@@ -33,7 +36,7 @@ def register_site(site_name: str):
 
 
 @frappe.whitelist(methods=["POST"])
-def send(messages, site_name: str):
+def send(messages: str, site_name: str):
     """
     API which is a wrapper around the _send function. It takes in the messages and enqueues a background job to send the messages to tokens via FCM.
     Before enqueuing the job, it checks if the user has the necessary permissions to send notifications.
@@ -67,7 +70,7 @@ def send(messages, site_name: str):
     return
 
 
-def _send(messages, site_url: str):
+def _send(messages: Messages, site_url: str):
     """
     Send messages to tokens via FCM
         Each message is a dictionary with the following keys:
@@ -201,7 +204,7 @@ def _send(messages, site_url: str):
         ).insert()
 
 @frappe.whitelist(methods=["POST"])
-def send_to_users(messages, site_name: str):
+def send_to_users(messages: str, site_name: str):
     """
     Send messages to users via FCM.
     Users is a list of user ids (Raven User ids)
@@ -228,7 +231,7 @@ def send_to_users(messages, site_name: str):
     return
 
 
-def _send_to_users(messages, site_url: str):
+def _send_to_users(messages: Messages, site_url: str):
     """
     Send messages to users via FCM
 
@@ -457,7 +460,7 @@ def create_user_token(site_name: str, user_id: str, token: str):
     }
 
 @frappe.whitelist(methods=["POST"])
-def import_user_tokens(site_name: str, tokens):
+def import_user_tokens(site_name: str, tokens: str):
     """
     Import user tokens for the given site.
     tokens is a list of dictionaries with the following keys:
