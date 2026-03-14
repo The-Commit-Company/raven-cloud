@@ -462,10 +462,17 @@ def create_user_token(site_name: str, user_id: str, token: str):
 @frappe.whitelist(methods=["POST"])
 def import_user_tokens(site_name: str, tokens: str):
     """
-    Import user tokens for the given site.
+    Sync user tokens for the given site.
     tokens is a list of dictionaries with the following keys:
         - user: str
         - fcm_token: str
+
+    This API fully syncs the tokens for the site.
+    It does the following:
+    - Deletes the tokens from RC that are not present in the incoming tokens from Raven Client
+    - Adds new tokens to RC that are not present on RC
+
+    In short, this API ensures that the tokens on RC exactly mirror the tokens on the Raven Client.
     """
 
     if isinstance(tokens, str):
@@ -473,31 +480,69 @@ def import_user_tokens(site_name: str, tokens: str):
 
     check_if_site_exists(site_name)
 
-    user_map = {}
+    # building an incoming set for faster lookup
+    incoming_tokens = {(token.get("user"), token.get("fcm_token")) for token in tokens}
 
-    for token in tokens:
-        if not user_map.get(token.get("user")):
-            user = get_site_user(site_name, token.get("user"))
+    rc_site_user = frappe.qb.DocType("RC Site User")
+    rc_site_user_token = frappe.qb.DocType("RC Site User Token")
 
-            if not user:
-                user = frappe.get_doc({
-                    "doctype": "RC Site User",
-                    "site": site_name,
-                    "user_id": token.get("user"),
-                }).insert().name
+    try:
 
-            user_map[token.get("user")] = user
+        # fetching all the existing tokens on RC for this site
+        existing_tokens_query = (
+            frappe.qb.from_(rc_site_user_token)
+            .inner_join(rc_site_user)
+            .on(rc_site_user_token.user == rc_site_user.name)
+            .select(rc_site_user_token.fcm_token, rc_site_user_token.name, rc_site_user.user_id)
+            .where(rc_site_user.site == site_name)
+        )
+
+        existing_tokens = existing_tokens_query.run(as_dict=True)
+
+        existing_tokens_map = {(row.get("user_id"), row.get("fcm_token")) for row in existing_tokens}
+
+        # deleting tokens on server that are not in incoming tokens
+        tokens_to_delete = [
+            row["name"] for row in existing_tokens
+            if (row["user_id"], row["fcm_token"]) not in incoming_tokens
+        ]
+
+        # deleting the tokens on RC that are not present in the incoming tokens
+        for token_name in tokens_to_delete:
+            frappe.delete_doc("RC Site User Token", token_name)
+
+        # adding tokens that don't exist on server
+        tokens_to_add = [
+            token for token in tokens
+            if (token.get("user"), token.get("fcm_token")) not in existing_tokens_map
+        ]
 
 
-        if frappe.db.exists("RC Site User Token", {"user": user_map[token.get("user")], "fcm_token": token.get("fcm_token")}):
-            continue
+        user_map = {}
 
+        for token in tokens_to_add:
+            user_id = token.get("user")
+            fcm_token = token.get("fcm_token")
 
-        frappe.get_doc({
-            "doctype": "RC Site User Token",
-            "user": user_map[token.get("user")],
-            "fcm_token": token.get("fcm_token"),
-        }).insert()
+            if user_id not in user_map:
+                user = get_site_user(site_name, user_id)
+                if not user:
+                    user = frappe.get_doc({
+                        "doctype": "RC Site User",
+                        "site": site_name,
+                        "user_id": user_id,
+                    }).insert().name
+
+                user_map[user_id] = user
+
+            frappe.get_doc({
+                "doctype": "RC Site User Token",
+                "user": user_map[user_id],
+                "fcm_token": fcm_token,
+            }).insert()
+    except Exception as e:
+        frappe.log_error(title=f"Error syncing user tokens for {site_name}", message=frappe.get_traceback())
+        frappe.throw(_(f"Error syncing user tokens for {site_name} - {str(e)}"))
 
     return {
         "status": "success",
