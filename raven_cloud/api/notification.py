@@ -466,13 +466,12 @@ def import_user_tokens(site_name: str, tokens: str):
     tokens is a list of dictionaries with the following keys:
         - user: str
         - fcm_token: str
-
-    This API fully syncs the tokens for the site.
-    It does the following:
-    - Deletes the tokens from RC that are not present in the incoming tokens from Raven Client
-    - Adds new tokens to RC that are not present on RC
-
-    In short, this API ensures that the tokens on RC exactly mirror the tokens on the Raven Client.
+    This API syncs tokens on a per-user basis.
+    For each user present in the incoming tokens:
+    - Deletes tokens on RC that are not in the incoming set
+    - Adds tokens that are not yet on RC
+    Tokens for users NOT in the incoming payload are left untouched,
+    making this safe to call with partial/chunked token lists.
     """
 
     frappe.log_error(title=f"Importing user tokens for {site_name}", message=tokens)
@@ -483,6 +482,7 @@ def import_user_tokens(site_name: str, tokens: str):
     check_if_site_exists(site_name)
 
     # building an incoming set for faster lookup
+    incoming_users = list({token.get("user") for token in tokens})
     incoming_tokens = {(token.get("user"), token.get("fcm_token")) for token in tokens}
 
     rc_site_user = frappe.qb.DocType("RC Site User")
@@ -497,6 +497,7 @@ def import_user_tokens(site_name: str, tokens: str):
             .on(rc_site_user_token.user == rc_site_user.name)
             .select(rc_site_user_token.fcm_token, rc_site_user_token.name, rc_site_user.user_id)
             .where(rc_site_user.site == site_name)
+            .where(rc_site_user.user_id.isin(incoming_users))
         )
 
         existing_tokens = existing_tokens_query.run(as_dict=True)
