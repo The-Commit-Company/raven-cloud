@@ -474,8 +474,6 @@ def import_user_tokens(site_name: str, tokens: str):
     making this safe to call with partial/chunked token lists.
     """
 
-    frappe.log_error(title=f"Importing user tokens for {site_name}", message=tokens)
-
     if isinstance(tokens, str):
         tokens = json.loads(tokens)
 
@@ -509,8 +507,6 @@ def import_user_tokens(site_name: str, tokens: str):
             row["name"] for row in existing_tokens
             if (row["user_id"], row["fcm_token"]) not in incoming_tokens
         ]
-
-        frappe.log_error(title=f"Tokens to delete for {site_name}", message=tokens_to_delete)
 
         # deleting the tokens on RC that are not present in the incoming tokens
         for token_name in tokens_to_delete:
@@ -548,8 +544,6 @@ def import_user_tokens(site_name: str, tokens: str):
     except Exception as e:
         frappe.log_error(title=f"Error syncing user tokens for {site_name}", message=frappe.get_traceback())
         frappe.throw(_(f"Error syncing user tokens for {site_name} - {str(e)}"))
-    finally:
-        frappe.log_error(title=f"Imported user tokens for {site_name}", message=tokens)
 
     return {
         "status": "success",
