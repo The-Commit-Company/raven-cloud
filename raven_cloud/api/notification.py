@@ -477,6 +477,12 @@ def import_user_tokens(site_name: str, tokens: str):
     if isinstance(tokens, str):
         tokens = json.loads(tokens)
 
+    # if no tokens are present, return
+    if not tokens:
+        return {
+            "status": "success",
+        }
+
     check_if_site_exists(site_name)
 
     # building an incoming set for faster lookup
