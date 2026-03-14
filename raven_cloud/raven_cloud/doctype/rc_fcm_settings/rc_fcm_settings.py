@@ -1,14 +1,14 @@
 # Copyright (c) 2025, The Commit Company (Algocode Technologies Private Limited) and contributors
 # For license information, please see license.txt
 
-import frappe
-import firebase_admin
 import json
+import time
+
+import firebase_admin
+import frappe
 import requests
 from frappe import _
 from frappe.model.document import Document
-import time
-
 
 
 class RCFCMSettings(Document):
@@ -25,7 +25,7 @@ class RCFCMSettings(Document):
 		firebase_project_id: DF.Data | None
 		vapid_public_key: DF.Data | None
 	# end: auto-generated types
-	
+
 	def validate(self):
 		# Ensure the firebase admin credential is a valid JSON
 		try:
@@ -33,18 +33,18 @@ class RCFCMSettings(Document):
 		except json.JSONDecodeError:
 			frappe.throw(_("Invalid JSON for Firebase Admin Credential"))
 		except Exception as e:
-			frappe.throw(str(e))
-	
+			frappe.throw(_(str(e)))
+
 	def before_save(self):
 		if not self.validate_firebase_credential():
 			frappe.throw(_("Invalid Firebase Admin Credential"))
 		else:
 			self.generate_web_config()
-	
+
 	# def after_save(self):
 	# 	# Clear the token cache
 	# 	frappe.cache().delete_value("firebase_access_token")
-	
+
 	def validate_firebase_credential(self):
 		firebase_admin_credential_json = json.loads(self.firebase_admin_credential)
 
@@ -54,11 +54,11 @@ class RCFCMSettings(Document):
 			firebase_admin.get_app(name="Raven")
 			return True
 		except Exception as e:
-			frappe.throw(str(e))
+			frappe.throw(_(str(e)))
 			return False
 		finally:
 			firebase_admin.delete_app(app)
-	
+
 	def generate_web_config(self):
 		credential_json = json.loads(self.firebase_admin_credential)
 		self.firebase_project_id = credential_json["project_id"]
@@ -95,7 +95,7 @@ class RCFCMSettings(Document):
 				time.sleep(5)
 
 			if firebase_application_id == "":
-				frappe.throw("Failed to register web app")
+				frappe.throw(_("Failed to register web app"))
 
 			# fetch web config
 			url = f"https://firebase.googleapis.com/v1beta1/projects/{credential.project_id}/webApps/{firebase_application_id}/config"
@@ -109,6 +109,6 @@ class RCFCMSettings(Document):
 				response_json = response.json()
 				self.firebase_client_configuration = json.dumps(response_json)
 		else:
-			frappe.throw("Failed to register web app")
-			
-			
+			frappe.throw(_("Failed to register web app"))
+
+

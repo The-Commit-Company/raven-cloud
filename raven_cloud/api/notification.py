@@ -1,16 +1,20 @@
 import json
+from typing import Any
 
 import firebase_admin
 import frappe
 from firebase_admin import messaging
+from frappe import _
 from frappe.utils.response import Response
 
 from raven_cloud.utils.fcm import get_app
 from raven_cloud.utils.notification import sanitize_fcm_data
 from raven_cloud.utils.rc_caching import get_push_tokens_for_user
 
+Message = dict[str, Any]
+Messages = list[Message]
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def register_site(site_name: str):
     frappe.only_for('Raven Cloud User')
 
@@ -31,8 +35,8 @@ def register_site(site_name: str):
     }
 
 
-@frappe.whitelist()
-def send(messages, site_name: str):
+@frappe.whitelist(methods=["POST"])
+def send(messages: str, site_name: str):
     """
     API which is a wrapper around the _send function. It takes in the messages and enqueues a background job to send the messages to tokens via FCM.
     Before enqueuing the job, it checks if the user has the necessary permissions to send notifications.
@@ -42,7 +46,14 @@ def send(messages, site_name: str):
 
     # check if the site exists in RC Site
     if not frappe.db.exists('RC Site', site_name):
-        frappe.throw('Site not created for the user')
+        frappe.throw(_("Site not created for the user"))
+
+    roles = frappe.get_roles()
+    if "System Manager" not in roles or "Administrator" not in roles:
+        # check if user has permission to send notifications to this site
+        if not frappe.db.exists('RC Site User', {'site': site_name, 'user_id': frappe.session.user}):
+            frappe.throw(_("You do not have permission to send notifications to this site."))
+
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -59,7 +70,7 @@ def send(messages, site_name: str):
     return
 
 
-def _send(messages, site_url: str):
+def _send(messages: Messages, site_url: str):
     """
     Send messages to tokens via FCM
         Each message is a dictionary with the following keys:
@@ -192,8 +203,8 @@ def _send(messages, site_url: str):
             }
         ).insert()
 
-@frappe.whitelist()
-def send_to_users(messages, site_name: str):
+@frappe.whitelist(methods=["POST"])
+def send_to_users(messages: str, site_name: str):
     """
     Send messages to users via FCM.
     Users is a list of user ids (Raven User ids)
@@ -202,7 +213,13 @@ def send_to_users(messages, site_name: str):
 
     # check if the site exists
     if not frappe.db.exists('RC Site', site_name):
-        frappe.throw('Site not registered on Raven Cloud, please ask your System Manager to register the site.')
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
+
+    roles = frappe.get_roles()
+    if "System Manager" not in roles or "Administrator" not in roles:
+        # check if user has permission to send notifications to this site
+        if not frappe.db.exists('RC Site User', {'site': site_name, 'user_id': frappe.session.user}):
+            frappe.throw(_("You do not have permission to send notifications to this site."))
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -214,7 +231,7 @@ def send_to_users(messages, site_name: str):
     return
 
 
-def _send_to_users(messages, site_url: str):
+def _send_to_users(messages: Messages, site_url: str):
     """
     Send messages to users via FCM
 
@@ -385,7 +402,7 @@ def check_if_site_exists(site_name: str, throw: bool = True):
     """
     if not frappe.db.exists("RC Site", site_name):
         if throw:
-            frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+            frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
         else:
             return False
     return True
@@ -443,12 +460,18 @@ def create_user_token(site_name: str, user_id: str, token: str):
     }
 
 @frappe.whitelist(methods=["POST"])
-def import_user_tokens(site_name: str, tokens):
+def import_user_tokens(site_name: str, tokens: str):
     """
-    Import user tokens for the given site.
+    Sync user tokens for the given site.
     tokens is a list of dictionaries with the following keys:
         - user: str
         - fcm_token: str
+    This API syncs tokens on a per-user basis.
+    For each user present in the incoming tokens:
+    - Deletes tokens on RC that are not in the incoming set
+    - Adds tokens that are not yet on RC
+    Tokens for users NOT in the incoming payload are left untouched,
+    making this safe to call with partial/chunked token lists.
     """
 
     if isinstance(tokens, str):
@@ -456,31 +479,71 @@ def import_user_tokens(site_name: str, tokens):
 
     check_if_site_exists(site_name)
 
-    user_map = {}
+    # building an incoming set for faster lookup
+    incoming_users = list({token.get("user") for token in tokens})
+    incoming_tokens = {(token.get("user"), token.get("fcm_token")) for token in tokens}
 
-    for token in tokens:
-        if not user_map.get(token.get("user")):
-            user = get_site_user(site_name, token.get("user"))
+    rc_site_user = frappe.qb.DocType("RC Site User")
+    rc_site_user_token = frappe.qb.DocType("RC Site User Token")
 
-            if not user:
-                user = frappe.get_doc({
-                    "doctype": "RC Site User",
-                    "site": site_name,
-                    "user_id": token.get("user"),
-                }).insert().name
+    try:
 
-            user_map[token.get("user")] = user
+        # fetching all the existing tokens on RC for this site
+        existing_tokens_query = (
+            frappe.qb.from_(rc_site_user_token)
+            .inner_join(rc_site_user)
+            .on(rc_site_user_token.user == rc_site_user.name)
+            .select(rc_site_user_token.fcm_token, rc_site_user_token.name, rc_site_user.user_id)
+            .where(rc_site_user.site == site_name)
+            .where(rc_site_user.user_id.isin(incoming_users))
+        )
+
+        existing_tokens = existing_tokens_query.run(as_dict=True)
+
+        existing_tokens_map = {(row.get("user_id"), row.get("fcm_token")) for row in existing_tokens}
+
+        # deleting tokens on server that are not in incoming tokens
+        tokens_to_delete = [
+            row["name"] for row in existing_tokens
+            if (row["user_id"], row["fcm_token"]) not in incoming_tokens
+        ]
+
+        # deleting the tokens on RC that are not present in the incoming tokens
+        for token_name in tokens_to_delete:
+            frappe.delete_doc("RC Site User Token", token_name)
+
+        # adding tokens that don't exist on server
+        tokens_to_add = [
+            token for token in tokens
+            if (token.get("user"), token.get("fcm_token")) not in existing_tokens_map
+        ]
 
 
-        if frappe.db.exists("RC Site User Token", {"user": user_map[token.get("user")], "fcm_token": token.get("fcm_token")}):
-            continue
+        user_map = {}
 
+        for token in tokens_to_add:
+            user_id = token.get("user")
+            fcm_token = token.get("fcm_token")
 
-        frappe.get_doc({
-            "doctype": "RC Site User Token",
-            "user": user_map[token.get("user")],
-            "fcm_token": token.get("fcm_token"),
-        }).insert()
+            if user_id not in user_map:
+                user = get_site_user(site_name, user_id)
+                if not user:
+                    user = frappe.get_doc({
+                        "doctype": "RC Site User",
+                        "site": site_name,
+                        "user_id": user_id,
+                    }).insert().name
+
+                user_map[user_id] = user
+
+            frappe.get_doc({
+                "doctype": "RC Site User Token",
+                "user": user_map[user_id],
+                "fcm_token": fcm_token,
+            }).insert()
+    except Exception as e:
+        frappe.log_error(title=f"Error syncing user tokens for {site_name}", message=frappe.get_traceback())
+        frappe.throw(_(f"Error syncing user tokens for {site_name} - {str(e)}"))
 
     return {
         "status": "success",
@@ -514,7 +577,7 @@ def create_site_channel(channel_id: str, site_name: str):
     site = frappe.db.exists("RC Site", site_name)
 
     if not site:
-        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
 
     try:
 
@@ -528,13 +591,13 @@ def create_site_channel(channel_id: str, site_name: str):
 
     except Exception as e:
         frappe.log_error(title=f"Error creating site channel for {channel_id} of {site_name}", message=frappe.get_traceback())
-        frappe.throw(f"Error creating site channel for {channel_id} of {site_name} - {str(e)}")
+        frappe.throw(_(f"Error creating site channel for {channel_id} of {site_name} - {str(e)}"))
 
     return {
         "status": "success",
     }
 
-@frappe.whitelist(methods=["POST"])
+# @frappe.whitelist(methods=["POST"])
 def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
     """
     API for channel/topic based subscription.
@@ -547,7 +610,7 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
     site = frappe.db.exists("RC Site", site_name)
 
     if not site:
-        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
 
     try:
         channel = frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id})
@@ -579,13 +642,13 @@ def subscribe_to_site_channel(channel_id: str, user_id: str, site_name: str):
 
     except Exception as e:
         frappe.log_error(title=f"Error subscribing to site channel for {user_id} of {site_name}", message=frappe.get_traceback())
-        frappe.throw(f"Error subscribing to site channel for {user_id} of {site_name} - {str(e)}")
+        frappe.throw(_(f"Error subscribing to site channel for {user_id} of {site_name} - {str(e)}"))
 
     return {
         "status": "success",
     }
 
-@frappe.whitelist(methods=["POST"])
+# @frappe.whitelist(methods=["POST"])
 def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str):
     """
     API for channel/topic based unsubscription.
@@ -596,7 +659,7 @@ def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str)
     site = frappe.db.exists("RC Site", site_name)
 
     if not site:
-        frappe.throw("Site not registered on Raven Cloud, please ask your System Manager to register the site.")
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
 
     # channel subscription only exists if the channel and user exists, so we don't need to check for the existence of the channel and user
     channel = frappe.db.get_value("RC Site Channel", {"site": site, "channel_id": channel_id}, ["name"])
@@ -608,7 +671,7 @@ def unsubscribe_from_site_channel(channel_id: str, user_id: str, site_name: str)
         "status": "success",
     }
 
-@frappe.whitelist(methods=["POST"])
+# @frappe.whitelist(methods=["POST"])
 def bulk_create_site_user_and_token(site_name: str, users: list[dict]):
     """
     Bulk create site user and token for the given site and users.
@@ -629,7 +692,7 @@ def bulk_create_site_user_and_token(site_name: str, users: list[dict]):
             frappe.log_error(title=error_message, message=frappe.get_traceback())
 
     if error_messages:
-        frappe.throw(f"Failed to create some site users and tokens: {'; '.join(error_messages)}")
+        frappe.throw(_(f"Failed to create some site users and tokens: {'; '.join(error_messages)}"))
 
     return {
         "status": "success",
@@ -705,4 +768,4 @@ def sync_invalid_tokens(site_name: str, batch_size: int = 10):
             title=f"Error in sync_invalid_tokens for {site_name}",
             message=frappe.get_traceback()
         )
-        frappe.throw(f"Failed to sync invalid tokens: {str(e)}")
+        frappe.throw(_(f"Failed to sync invalid tokens: {str(e)}"))

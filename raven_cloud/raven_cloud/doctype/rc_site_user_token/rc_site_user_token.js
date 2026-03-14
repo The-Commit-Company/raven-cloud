@@ -5,7 +5,7 @@ frappe.ui.form.on("RC Site User Token", {
     refresh(frm) {
 
         // a button which triggers a simulation of sending a test notification to the user
-        frm.add_custom_button("Send Test Notification", () => {
+        frm.add_custom_button(__("Send Test Notification"), () => {
 
             // get the site name from the user, ask the user for the site name
 
@@ -22,7 +22,6 @@ frappe.ui.form.on("RC Site User Token", {
                 ],
                 primary_action_label: "Send",
                 primary_action(values) {
-                    console.log(values);
                     site_name = values.site_name;
 
                     frappe.call("raven_cloud.api.notification.send", {
@@ -37,7 +36,7 @@ frappe.ui.form.on("RC Site User Token", {
                         ],
                         site_name: values.site_name,
                     }).then((r) => {
-                        frappe.msgprint(`Test notification sending attempt completed.`);
+                        frappe.msgprint(_("Test notification sending attempt completed."));
 
                         d.hide();
                     });

@@ -4,7 +4,7 @@
 frappe.ui.form.on("RC FCM Settings", {
     refresh(frm) {
 
-        frm.add_custom_button("Send Test Notification", () => {
+        frm.add_custom_button(_("Send Test Notification"), () => {
 
             let d = new frappe.ui.Dialog({
                 title: "Send Test Notification",
