@@ -6,3 +6,4 @@
 # Patches added in this section will be executed after doctypes are migrated
 raven_cloud.patches.v1_0.backfill_weekly_summaries
 raven_cloud.patches.v1_0.cleanup_old_notification_logs
+raven_cloud.patches.v1_0.add_unique_constraint_rc_site_user_token
