@@ -8,7 +8,7 @@ from frappe import _
 from frappe.utils.response import Response
 
 from raven_cloud.utils.fcm import get_app
-from raven_cloud.utils.notification import sanitize_fcm_data
+from raven_cloud.utils.notification import sanitize_fcm_data, get_background_job_id
 from raven_cloud.utils.rc_caching import get_push_tokens_for_user
 
 Message = dict[str, Any]
@@ -58,12 +58,16 @@ def send(messages: str, site_name: str):
     if isinstance(messages, str):
         messages = json.loads(messages)
 
+    job_id = get_background_job_id(messages, site_name)
+
     # Enqueue the job of sending notifications
     frappe.enqueue(
         _send,
         messages=messages,
         site_url=site_name,
         queue='short',
+        job_id=job_id,
+        deduplicate=True
     )
 
     # TODO: Return the response from api itself.
@@ -92,6 +96,12 @@ def _send(messages: Messages, site_url: str):
 
     try:
         for message in messages:
+            # remove duplicate tokens to avoid sending duplicate notifications
+            message_tokens = list(dict.fromkeys(message.get("tokens", [])))
+
+            if not message_tokens:
+                continue
+
             notification = None
             data = None
             webpush = None
@@ -138,7 +148,7 @@ def _send(messages: Messages, site_url: str):
             if message.get('data'):
                 data = sanitize_fcm_data(message['data'])
 
-            for token in message.get('tokens', []):
+            for token in message_tokens:
                 fcm_message = messaging.Message(
                     token=token,
                     notification=notification,
@@ -224,8 +234,17 @@ def send_to_users(messages: str, site_name: str):
     if isinstance(messages, str):
         messages = json.loads(messages)
 
+    job_id = get_background_job_id(messages, site_name)
+
     # enqueue the job of sending notifications
-    frappe.enqueue(_send_to_users, messages=messages, site_url=site_name, queue='short')
+    frappe.enqueue(
+        _send_to_users,
+        messages=messages,
+        site_url=site_name,
+        queue='short',
+        job_id=job_id,
+        deduplicate=True
+    )
 
     # TODO: Return the response from api itself.
     return
@@ -257,6 +276,9 @@ def _send_to_users(messages: Messages, site_url: str):
             message_tokens = []
             for user in message.get("users", []):
                 message_tokens.extend(get_push_tokens_for_user(user, site_url))
+
+            # remove duplicate tokens to avoid sending duplicate notifications - not using set() because it doesn't preserve order
+            message_tokens = list(dict.fromkeys(message_tokens))
 
             if not message_tokens:
                 continue
