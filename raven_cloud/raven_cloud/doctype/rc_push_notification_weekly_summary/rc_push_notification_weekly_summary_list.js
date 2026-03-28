@@ -22,7 +22,7 @@ frappe.listview_settings["RC Push Notification Weekly Summary"] = {
                 primary_action_label: __("Run"),
                 primary_action(values) {
                     frappe.call({
-                        method: "raven_cloud.doctype.rc_push_notification_weekly_summary.rc_push_notification_weekly_summary.trigger_weekly_aggregation",
+                        method: "raven_cloud.raven_cloud.doctype.rc_push_notification_weekly_summary.rc_push_notification_weekly_summary.trigger_weekly_aggregation",
                         args: {
                             reference_date: values.reference_date,
                         },
