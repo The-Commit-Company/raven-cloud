@@ -154,16 +154,16 @@ scheduler_events = {
         "raven_cloud.doctype.rc_push_notification_log.rc_push_notification_log.cleanup_old_logs"
     ],
     # "hourly": ["raven_cloud.tasks.hourly"],
-    # "weekly": [
-    #     "raven_cloud.doctype.rc_push_notification_weekly_summary.rc_push_notification_weekly_summary.aggregate_weekly_logs"
-    # ],
+    "weekly": [
+        "raven_cloud.doctype.rc_push_notification_weekly_summary.rc_push_notification_weekly_summary.aggregate_weekly_logs"
+    ],
     # "monthly": ["raven_cloud.tasks.monthly"],
-    "cron": {
-        # custom cron to run every sunday at 12:00 AM
-        "0 0 * * 0": [
-            "raven_cloud.doctype.rc_push_notification_weekly_summary.rc_push_notification_weekly_summary.aggregate_weekly_logs"
-        ],
-    },
+    # "cron": {
+    #     # custom cron to run every sunday at 12:00 AM
+    #     "0 0 * * 0": [
+    #         "raven_cloud.doctype.rc_push_notification_weekly_summary.rc_push_notification_weekly_summary.aggregate_weekly_logs"
+    #     ],
+    # },
 }
 
 # Testing
