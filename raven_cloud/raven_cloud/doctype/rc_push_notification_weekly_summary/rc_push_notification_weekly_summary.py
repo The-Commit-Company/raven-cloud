@@ -37,24 +37,29 @@ class RCPushNotificationWeeklySummary(Document):
     pass
 
 
-def aggregate_weekly_logs():
-    """
-    Aggregate RC Push Notification Log entries for the previous week.
+def _get_week_range(reference_date=None):
+    # if no reference date is provided, uses getdate() to get the current date and then subtracts 7 days to get the start of the week
+    reference_date = getdate(reference_date or add_to_date(getdate(), days=-7))
+    return (
+        getdate(get_first_day_of_week(reference_date)),
+        getdate(get_last_day_of_week(reference_date)),
+    )
 
-    This function is designed to run weekly (on Sunday) via scheduler.
-    It processes all logs from the previous week, groups them by site,
-    and creates summary records with aggregated statistics.
-    """
-    # Calculate previous week's date range
-    today = getdate()
-    last_week = add_to_date(today, days=-7)
-    week_start = getdate(get_first_day_of_week(last_week))
-    week_end = getdate(get_last_day_of_week(last_week))
 
-    # Aggregate logs by site for the previous week using efficient SQL
+def _aggregate_weekly_logs_for_period(week_start, week_end):
+    stats = {
+        "week_start_date": week_start,
+        "week_end_date": week_end,
+        "sites_with_logs": 0,
+        "created": 0,
+        "updated": 0,
+        "skipped": 0,
+    }
+
+    # Aggregate logs by site for the given week using efficient SQL
     results = frappe.db.sql(
         """
-		SELECT 
+		SELECT
 			site,
 			COUNT(*) as logs_processed,
 			SUM(number_of_messages) as total_messages,
@@ -69,9 +74,15 @@ def aggregate_weekly_logs():
         as_dict=True,
     )
 
+    stats["sites_with_logs"] = len(results)
+
     # Create weekly summary records for each site
     for result in results:
         try:
+            if not frappe.db.exists("RC Site", {"name": result.site}):
+                stats["skipped"] += 1
+                continue
+
             # Check if a summary already exists for this site and week
             existing = frappe.db.exists(
                 "RC Push Notification Weekly Summary",
@@ -88,6 +99,7 @@ def aggregate_weekly_logs():
                 doc.logs_processed = result.logs_processed or 0
                 doc.aggregated_on = now_datetime()
                 doc.save()
+                stats["updated"] += 1
             else:
                 # Create new summary record
                 doc = frappe.get_doc(
@@ -105,8 +117,29 @@ def aggregate_weekly_logs():
                     }
                 )
                 doc.save()
+                stats["created"] += 1
         except Exception:
             frappe.log_error(
                 title=f"Error creating/updating weekly summary for site {result.site} for week {week_start} to {week_end}",
                 message=frappe.get_traceback(),
             )
+
+    return stats
+
+
+def aggregate_weekly_logs(reference_date=None):
+    """
+    Aggregate RC Push Notification Log entries for the previous week by default.
+
+    This function is designed to run weekly (on Sunday) via scheduler.
+    It processes all logs from the previous week, groups them by site,
+    and creates summary records with aggregated statistics.
+    """
+    week_start, week_end = _get_week_range(reference_date)
+    return _aggregate_weekly_logs_for_period(week_start, week_end)
+
+
+@frappe.whitelist()
+def trigger_weekly_aggregation(reference_date=None):
+    frappe.only_for("System Manager")
+    return aggregate_weekly_logs(reference_date=reference_date)
