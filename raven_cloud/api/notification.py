@@ -5,6 +5,7 @@ import firebase_admin
 import frappe
 from firebase_admin import messaging
 from frappe import _
+from frappe.utils import now_datetime
 from frappe.utils.response import Response
 
 from raven_cloud.utils.fcm import get_app
@@ -26,6 +27,16 @@ def register_site(site_name: str):
                 'site': site_name,
             }
         ).insert()
+
+    # update the last registered on and last registered by fields - to keep track of the last time the site was registered and by whom
+    frappe.db.set_value(
+        'RC Site',
+        site_name,
+        {
+            'last_registered_on': now_datetime(),
+            'last_registered_by': frappe.session.user,
+        }
+    )
 
     fcm_settings = frappe.get_doc('RC FCM Settings')
 
@@ -495,26 +506,34 @@ def import_user_tokens(site_name: str, tokens: str):
     Tokens for users NOT in the incoming payload are left untouched,
     making this safe to call with partial/chunked token lists.
     """
-
-    if isinstance(tokens, str):
-        tokens = json.loads(tokens)
-
-    # if no tokens are present, return
-    if not tokens:
-        return {
-            "status": "success",
-        }
-
     check_if_site_exists(site_name)
 
-    # building an incoming set for faster lookup
-    incoming_users = list({token.get("user") for token in tokens})
-    incoming_tokens = {(token.get("user"), token.get("fcm_token")) for token in tokens}
-
-    rc_site_user = frappe.qb.DocType("RC Site User")
-    rc_site_user_token = frappe.qb.DocType("RC Site User Token")
-
     try:
+        if isinstance(tokens, str):
+            tokens = json.loads(tokens)
+
+        # if no tokens are present, return
+        if not tokens:
+            frappe.db.set_value(
+                "RC Site",
+                site_name,
+                {
+                    "last_synced_on": now_datetime(),
+                    "last_synced_status": "Success",
+                    "last_sync_error": None,
+                },
+                update_modified=False,
+            )
+            return {
+                "status": "success",
+            }
+
+        # building an incoming set for faster lookup
+        incoming_users = list({token.get("user") for token in tokens})
+        incoming_tokens = {(token.get("user"), token.get("fcm_token")) for token in tokens}
+
+        rc_site_user = frappe.qb.DocType("RC Site User")
+        rc_site_user_token = frappe.qb.DocType("RC Site User Token")
 
         # fetching all the existing tokens on RC for this site
         existing_tokens_query = (
@@ -569,7 +588,29 @@ def import_user_tokens(site_name: str, tokens: str):
                 "user": user_map[user_id],
                 "fcm_token": fcm_token,
             }).insert()
+
+        frappe.db.set_value(
+            "RC Site",
+            site_name,
+            {
+                "last_synced_on": now_datetime(),
+                "last_synced_status": "Success",
+                "last_sync_error": None,
+                "last_synced_by": frappe.session.user,
+            },
+            update_modified=False,
+        )
     except Exception as e:
+        frappe.db.set_value(
+            "RC Site",
+            site_name,
+            {
+                "last_synced_status": "Failed",
+                "last_sync_error": str(e),
+                "last_synced_by": frappe.session.user,
+            },
+            update_modified=False,
+        )
         frappe.log_error(title=f"Error syncing user tokens for {site_name}", message=frappe.get_traceback())
         frappe.throw(_(f"Error syncing user tokens for {site_name} - {str(e)}"))
 

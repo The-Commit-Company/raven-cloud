@@ -16,6 +16,12 @@ class RCSite(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		last_registered_by: DF.Link | None
+		last_registered_on: DF.Datetime | None
+		last_sync_error: DF.SmallText | None
+		last_synced_by: DF.Link | None
+		last_synced_on: DF.Datetime | None
+		last_synced_status: DF.Literal["", "Failed", "Success"]
 		site: DF.Data
 	# ruff: noqa
 	# end: auto-generated types
