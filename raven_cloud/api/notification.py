@@ -59,13 +59,6 @@ def send(messages: str, site_name: str):
     if not frappe.db.exists('RC Site', site_name):
         frappe.throw(_("Site not created for the user"))
 
-    roles = frappe.get_roles()
-    if "System Manager" not in roles or "Administrator" not in roles:
-        # check if user has permission to send notifications to this site
-        if not frappe.db.exists('RC Site User', {'site': site_name, 'user_id': frappe.session.user}):
-            frappe.throw(_("You do not have permission to send notifications to this site."))
-
-
     if isinstance(messages, str):
         messages = json.loads(messages)
 
@@ -235,12 +228,6 @@ def send_to_users(messages: str, site_name: str):
     # check if the site exists
     if not frappe.db.exists('RC Site', site_name):
         frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
-
-    roles = frappe.get_roles()
-    if "System Manager" not in roles or "Administrator" not in roles:
-        # check if user has permission to send notifications to this site
-        if not frappe.db.exists('RC Site User', {'site': site_name, 'user_id': frappe.session.user}):
-            frappe.throw(_("You do not have permission to send notifications to this site."))
 
     if isinstance(messages, str):
         messages = json.loads(messages)
