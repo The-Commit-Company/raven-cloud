@@ -118,7 +118,7 @@ def _send(messages: Messages, site_url: str):
             tag = message.get('tag')
             click_action = message.get('click_action')
 
-            # Fold presentation fields into `data` so Web clients receive a data-only message.
+            # Consolidate presentation fields into `data` so Web clients receive a data-only message.
             # Web path: top-level `notification` + `data` makes FCM auto-display AND fire
             # `onBackgroundMessage`, which causes duplicate notifications. Data-only stops the
             # auto-display and lets the Raven SW render exactly once from `payload.data`.
@@ -140,8 +140,7 @@ def _send(messages: Messages, site_url: str):
             if notif:
                 # Intentionally NO `webpush.notification` here; together with `notification=None` below this is what prevents the web duplicate notification issue on PWAs.
                 # `fcm_options.link` is a fallback click target for non-Chrome browsers where the SW
-                # defers to default FCM click handling; `Urgency=high` tells the push service to
-                # deliver immediately instead of batching (needed for chat-style real-time pushes).
+                # defers to default FCM click handling; `Urgency=high` tells the push service to deliver immediately instead of batching (needed for chat-style real-time pushes).
                 if click_action and click_action.startswith('https://'):
                     webpush = messaging.WebpushConfig(
                         fcm_options=messaging.WebpushFCMOptions(link=click_action),
@@ -149,9 +148,6 @@ def _send(messages: Messages, site_url: str):
                     )
 
                 # temp? don't send image to android for now
-                # AndroidConfig applies only to Android tokens, so this cannot re-introduce the
-                # Web dup. Kept because Android needs an explicit `android.notification` for the OS
-                # to render when the app process is killed.
                 # - priority='high' (both levels): wakes device out of Doze for prompt delivery.
                 # - tag: collapses notifications with the same tag (e.g. same channel) into one.
                 android = messaging.AndroidConfig(
@@ -166,9 +162,6 @@ def _send(messages: Messages, site_url: str):
                     ),
                 )
 
-                # APNSConfig - iOS equivalent of the Android override. Since we removed the top-level
-                # `notification`, iOS would otherwise receive a silent push; `aps.alert` restores
-                # the visible notification.
                 # - apns-priority=10: required by APNS for alerts that play sound / wake the screen.
                 # - fcm_options.image: rich media attachment when an image URL is provided.
                 apns = messaging.APNSConfig(
@@ -330,10 +323,9 @@ def _send_to_users(messages: Messages, site_url: str):
             tag = message.get("tag")
             click_action = message.get("click_action")
 
-            # Fold presentation fields into `data` so Web clients receive a data-only message.
+            # Consolidate presentation fields into `data` so Web clients receive a data-only message.
             # Web path: top-level `notification` + `data` makes FCM auto-display AND fire
-            # `onBackgroundMessage`, which causes duplicate notifications. Data-only stops the
-            # auto-display and lets the Raven SW render exactly once from `payload.data`.
+            # `onBackgroundMessage`, which causes duplicate notifications. Data-only stops the auto-display and lets the Raven SW render exactly once from `payload.data`.
             merged_data = {
                 **(message.get("data") or {}),
                 "title": title,
@@ -353,8 +345,7 @@ def _send_to_users(messages: Messages, site_url: str):
             if notif:
                 # Intentionally NO `webpush.notification` here; together with `notification=None` below this is what prevents the web duplicate notification issue on PWAs.
                 # `fcm_options.link` is a fallback click target for non-Chrome browsers where the SW
-                # defers to default FCM click handling; `Urgency=high` tells the push service to
-                # deliver immediately instead of batching (needed for chat-style real-time pushes).
+                # defers to default FCM click handling; `Urgency=high` tells the push service to deliver immediately instead of batching (needed for chat-style real-time pushes).
                 if click_action and click_action.startswith("https://"):
                     webpush = messaging.WebpushConfig(
                         fcm_options=messaging.WebpushFCMOptions(link=click_action),
@@ -362,9 +353,6 @@ def _send_to_users(messages: Messages, site_url: str):
                     )
 
                 # temp? don't send image to android for now
-                # AndroidConfig applies only to Android tokens, so this cannot re-introduce the
-                # Web dup. Kept because Android needs an explicit `android.notification` for the OS
-                # to render when the app process is killed.
                 # - priority='high' (both levels): wakes device out of Doze for prompt delivery.
                 # - tag: collapses notifications with the same tag (e.g. same channel) into one.
                 android = messaging.AndroidConfig(
@@ -378,14 +366,9 @@ def _send_to_users(messages: Messages, site_url: str):
                     ),
                 )
 
-                # APNSConfig: iOS/APNS equivalent of the Android override. Since we removed the
-                # top-level `notification`, iOS would receive a silent push and show nothing unless
-                # we attach an explicit `aps.alert` - this block is what makes iOS notifications
-                # visible after this change.
                 # - aps.alert {title, body}: the user-visible content shown by iOS.
                 # - sound="default": plays the default alert sound.
-                # - apns-priority=10: immediate delivery for alert-type pushes; required by APNS for
-                #   anything that wakes the screen / plays sound.
+                # - apns-priority=10: immediate delivery for alert-type pushes; required by APNS for anything that wakes the screen / plays sound.
                 # - fcm_options.image: lets APNS attach a rich image to the alert when provided.
                 apns = messaging.APNSConfig(
                     headers={"apns-priority": "10"},
@@ -403,9 +386,7 @@ def _send_to_users(messages: Messages, site_url: str):
             for token in message_tokens:
                 fcm_message = messaging.Message(
                     token=token,
-                    # `notification=None` is the critical change: without a top-level notification
-                    # payload, FCM will NOT auto-display on Web, eliminating the duplicate. Android
-                    # and iOS still render via their platform-specific configs above.
+                    # `notification=None` is the critical change: without a top-level notification payload, FCM will NOT auto-display on Web, eliminating the duplicate. Android and iOS still render via their platform-specific configs above.
                     notification=None,
                     data=data,
                     webpush=webpush,
