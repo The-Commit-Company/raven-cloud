@@ -138,14 +138,30 @@ def _send(messages: Messages, site_url: str):
             data = sanitize_fcm_data(merged_data) if merged_data else None
 
             if notif:
-                # Intentionally NO `webpush.notification` here; together with `notification=None` below this is what prevents the web duplicate notification issue on PWAs.
-                # `fcm_options.link` is a fallback click target for non-Chrome browsers where the SW
-                # defers to default FCM click handling; `Urgency=high` tells the push service to deliver immediately instead of batching (needed for chat-style real-time pushes).
+                # WebpushNotification carries title/body on the wire so FCM sends the push to Safari
+                # via APNs with `apns-push-type: alert` (required for Safari Web Push / iOS PWA to
+                # display anything - background/silent pushes are dropped by Apple). Chrome/Firefox
+                # also accept it and our SW still owns rendering via `onBackgroundMessage` (the FCM
+                # JS SDK suppresses auto-display when a background handler is registered), so there
+                # is no duplicate notification.
+                webpush_fcm_options = None
                 if click_action and click_action.startswith('https://'):
-                    webpush = messaging.WebpushConfig(
-                        fcm_options=messaging.WebpushFCMOptions(link=click_action),
-                        headers={'Urgency': 'high'},
-                    )
+                    # `fcm_options.link` is a fallback click target for non-Chrome browsers where the SW
+                    # defers to default FCM click handling.
+                    webpush_fcm_options = messaging.WebpushFCMOptions(link=click_action)
+
+                webpush = messaging.WebpushConfig(
+                    notification=messaging.WebpushNotification(
+                        title=title,
+                        body=body,
+                        icon=image or None,
+                        tag=tag or (message.get('data') or {}).get('channel_id'),
+                    ),
+                    fcm_options=webpush_fcm_options,
+                    # `Urgency=high` tells the push service to deliver immediately instead of
+                    # batching (needed for chat-style real-time pushes).
+                    headers={'Urgency': 'high'},
+                )
 
                 # temp? don't send image to android for now
                 # - priority='high' (both levels): wakes device out of Doze for prompt delivery.
@@ -343,14 +359,30 @@ def _send_to_users(messages: Messages, site_url: str):
             data = sanitize_fcm_data(merged_data) if merged_data else None
 
             if notif:
-                # Intentionally NO `webpush.notification` here; together with `notification=None` below this is what prevents the web duplicate notification issue on PWAs.
-                # `fcm_options.link` is a fallback click target for non-Chrome browsers where the SW
-                # defers to default FCM click handling; `Urgency=high` tells the push service to deliver immediately instead of batching (needed for chat-style real-time pushes).
+                # WebpushNotification carries title/body on the wire so FCM sends the push to Safari
+                # via APNs with `apns-push-type: alert` (required for Safari Web Push / iOS PWA to
+                # display anything - background/silent pushes are dropped by Apple). Chrome/Firefox
+                # also accept it and our SW still owns rendering via `onBackgroundMessage` (the FCM
+                # JS SDK suppresses auto-display when a background handler is registered), so there
+                # is no duplicate notification.
+                webpush_fcm_options = None
                 if click_action and click_action.startswith("https://"):
-                    webpush = messaging.WebpushConfig(
-                        fcm_options=messaging.WebpushFCMOptions(link=click_action),
-                        headers={"Urgency": "high"},
-                    )
+                    # `fcm_options.link` is a fallback click target for non-Chrome browsers where the SW
+                    # defers to default FCM click handling.
+                    webpush_fcm_options = messaging.WebpushFCMOptions(link=click_action)
+
+                webpush = messaging.WebpushConfig(
+                    notification=messaging.WebpushNotification(
+                        title=title,
+                        body=body,
+                        icon=image or None,
+                        tag=tag or (message.get("data") or {}).get("channel_id"),
+                    ),
+                    fcm_options=webpush_fcm_options,
+                    # `Urgency=high` tells the push service to deliver immediately instead of
+                    # batching (needed for chat-style real-time pushes).
+                    headers={"Urgency": "high"},
+                )
 
                 # temp? don't send image to android for now
                 # - priority='high' (both levels): wakes device out of Doze for prompt delivery.
