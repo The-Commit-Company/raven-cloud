@@ -376,7 +376,6 @@ def _send_to_users(messages: Messages, site_url: str):
                         title=title,
                         body=body,
                         icon=image or None,
-                        tag=tag or (message.get("data") or {}).get("channel_id"),
                     ),
                     fcm_options=webpush_fcm_options,
                     # `Urgency=high` tells the push service to deliver immediately instead of
@@ -386,13 +385,11 @@ def _send_to_users(messages: Messages, site_url: str):
 
                 # temp? don't send image to android for now
                 # - priority='high' (both levels): wakes device out of Doze for prompt delivery.
-                # - tag: collapses notifications with the same tag (e.g. same channel) into one.
                 android = messaging.AndroidConfig(
                     priority="high",
                     notification=messaging.AndroidNotification(
                         title=title,
                         body=body,
-                        tag=tag,
                         priority="high",
                         sound="default",
                     ),
