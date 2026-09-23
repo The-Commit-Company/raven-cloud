@@ -108,7 +108,6 @@ def _send(messages: Messages, site_url: str):
 
             data = None
             webpush = None
-            android = None
             apns = None
 
             notif = message.get('notification') or {}
@@ -163,20 +162,6 @@ def _send(messages: Messages, site_url: str):
                     headers={'Urgency': 'high'},
                 )
 
-                # temp? don't send image to android for now
-                # - priority='high' (both levels): wakes device out of Doze for prompt delivery.
-                # - tag: collapses notifications with the same tag (e.g. same channel) into one.
-                android = messaging.AndroidConfig(
-                    priority='high',
-                    notification=messaging.AndroidNotification(
-                        title=title,
-                        body=body,
-                        tag=tag,
-                        # image=message.get('image', None),
-                        priority='high',
-                        sound='default',
-                    ),
-                )
 
                 # - apns-priority=10: required by APNS for alerts that play sound / wake the screen.
                 # - fcm_options.image: rich media attachment when an image URL is provided.
@@ -188,9 +173,29 @@ def _send(messages: Messages, site_url: str):
                             # content_available=True,
                             alert=messaging.ApsAlert(title=title, body=body),
                             sound='default',
+                            # The app's notification service extension runs only on a mutable alert:
+                            # it adds the sender's avatar and the site. thread_id groups a conversation.
+                            mutable_content=True,
+                            thread_id=tag,
                         ),
                     ),
                 )
+
+            # temp? don't send image to android for now
+            # - priority='high' (both levels): wakes device out of Doze for prompt delivery. A push
+            #   with no notification is drawn by the app itself, and needs waking just as much.
+            # - tag: collapses notifications with the same tag (e.g. same channel) into one.
+            android = messaging.AndroidConfig(
+                priority='high',
+                notification=messaging.AndroidNotification(
+                    title=title,
+                    body=body,
+                    tag=tag,
+                    # image=message.get('image', None),
+                    priority='high',
+                    sound='default',
+                ) if notif else None,
+            )
 
             for token in message_tokens:
                 fcm_message = messaging.Message(
@@ -329,7 +334,6 @@ def _send_to_users(messages: Messages, site_url: str):
 
             data = None
             webpush = None
-            android = None
             apns = None
 
             notif = message.get("notification") or {}
@@ -383,18 +387,6 @@ def _send_to_users(messages: Messages, site_url: str):
                     headers={"Urgency": "high"},
                 )
 
-                # temp? don't send image to android for now
-                # - priority='high' (both levels): wakes device out of Doze for prompt delivery.
-                android = messaging.AndroidConfig(
-                    priority="high",
-                    notification=messaging.AndroidNotification(
-                        title=title,
-                        body=body,
-                        priority="high",
-                        sound="default",
-                    ),
-                )
-
                 # - aps.alert {title, body}: the user-visible content shown by iOS.
                 # - sound="default": plays the default alert sound.
                 # - apns-priority=10: immediate delivery for alert-type pushes; required by APNS for anything that wakes the screen / plays sound.
@@ -406,10 +398,26 @@ def _send_to_users(messages: Messages, site_url: str):
                             alert=messaging.ApsAlert(title=title, body=body),
                             sound="default",
                             # content_available=True,
+                            # The app's notification service extension runs only on a mutable alert:
+                            # it adds the sender's avatar and the site. thread_id groups a conversation.
+                            mutable_content=True,
+                            thread_id=tag,
                         ),
                     ),
                     fcm_options=messaging.APNSFCMOptions(image=image) if image else None,
                 )
+
+            # - priority='high' (both levels): wakes device out of Doze for prompt delivery. A push
+            #   with no notification is drawn by the app itself, and needs waking just as much.
+            android = messaging.AndroidConfig(
+                priority="high",
+                notification=messaging.AndroidNotification(
+                    title=title,
+                    body=body,
+                    priority="high",
+                    sound="default",
+                ) if notif else None,
+            )
 
             # create FCM messages for THIS message's tokens only
             for token in message_tokens:
