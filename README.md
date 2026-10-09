@@ -10,7 +10,9 @@ Eventually, Raven Cloud can be extended for other features like Typesense search
 
 ## Frappe Cloud sites
 
-A Raven site on Frappe Cloud sets push notifications up without keys from its owner. The site gets a 5-minute token from Frappe Cloud that names its team, and exchanges it at `raven_cloud.api.frappe_cloud.exchange_frappe_cloud_token`. Raven Cloud verifies the token against Frappe Cloud's public keys, then returns the API keys of the team's user. Every site of a team gets the same keys.
+A Raven site on Frappe Cloud sets push notifications up without keys from its owner. The site gets a 5-minute token from Frappe Cloud that names its team and the hostnames the team serves. The site sends the token and its hostname to `raven_cloud.api.frappe_cloud.exchange_frappe_cloud_token`. Raven Cloud verifies the token against Frappe Cloud's public keys and registers the hostname for the team's user. It returns that user's API keys and the push settings. Every site of a team gets the same keys.
+
+Only the account that registered a site can send to it or change its device tokens. A System Manager can use any site. Frappe Cloud vouches for its hostnames, so when another account registered a hostname first, the team takes the site over and the old account's device tokens are removed.
 
 To trust Frappe Cloud, set its issuer URL in the site config:
 
@@ -18,7 +20,7 @@ To trust Frappe Cloud, set its issuer URL in the site config:
 bench --site <site> set-config frappe_cloud_issuer <frappe-cloud-url>
 ```
 
-Raven Cloud refuses a token when its audience is not this site's URL, or when it is expired or is not a `team-identity` token. To rotate a team's keys, generate new keys on its user. Each site gets them again when Raven Cloud refuses the old ones. To cut a team off, disable its user.
+Raven Cloud refuses a token when its audience is not this site's URL, when it is expired or is not a `team-identity` token, or when it does not list the site's hostname. Set `host_name` on Raven Cloud, so its URL matches the audience that sites use. To rotate a team's keys, generate new keys on its user. Each site gets them again when Raven Cloud refuses the old ones. To cut a team off, disable its user.
 
 ## License
 
