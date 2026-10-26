@@ -20,7 +20,9 @@ def register_site(site_name: str):
     frappe.only_for('Raven Cloud User')
 
     # Check if the site is already registered
-    if not frappe.db.exists('RC Site', {'site': site_name}):
+    if frappe.db.exists('RC Site', site_name):
+        check_site_access(site_name)
+    else:
         frappe.get_doc(
             {
                 'doctype': 'RC Site',
@@ -38,6 +40,11 @@ def register_site(site_name: str):
         }
     )
 
+    return get_push_settings()
+
+
+def get_push_settings() -> dict:
+    """The browser push settings that every registered site uses."""
     fcm_settings = frappe.get_doc('RC FCM Settings')
 
     return {
@@ -55,9 +62,7 @@ def send(messages: str, site_name: str):
 
     frappe.only_for('Raven Cloud User')
 
-    # check if the site exists in RC Site
-    if not frappe.db.exists('RC Site', site_name):
-        frappe.throw(_("Site not created for the user"))
+    check_site_access(site_name)
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -273,9 +278,7 @@ def send_to_users(messages: str, site_name: str):
     """
     frappe.only_for('Raven Cloud User')
 
-    # check if the site exists
-    if not frappe.db.exists('RC Site', site_name):
-        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
+    check_site_access(site_name)
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -506,16 +509,16 @@ def generate_api_keys():
     }
 
 
-def check_if_site_exists(site_name: str, throw: bool = True):
+def check_site_access(site_name: str) -> None:
     """
-    Check if the site exists.
+    Only the account that registered a site may use it. A System Manager may use any site.
     """
-    if not frappe.db.exists("RC Site", site_name):
-        if throw:
-            frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
-        else:
-            return False
-    return True
+    owner = frappe.db.get_value("RC Site", site_name, "owner")
+    if not owner:
+        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
+
+    if owner != frappe.session.user and "System Manager" not in frappe.get_roles():
+        frappe.throw(_("Site {0} is registered by another account.").format(site_name), frappe.PermissionError)
 
 def get_site_user(site_name: str, user_id: str):
     """
@@ -530,7 +533,7 @@ def create_user_token(site_name: str, user_id: str, token: str):
 
     """
     # check if the site exists
-    check_if_site_exists(site_name)
+    check_site_access(site_name)
 
     site_user = get_site_user(site_name, user_id)
 
@@ -583,7 +586,7 @@ def import_user_tokens(site_name: str, tokens: str):
     Tokens for users NOT in the incoming payload are left untouched,
     making this safe to call with partial/chunked token lists.
     """
-    check_if_site_exists(site_name)
+    check_site_access(site_name)
 
     try:
         if isinstance(tokens, str):
@@ -700,7 +703,7 @@ def delete_user_token(site_name: str, user_id: str, token: str):
     """
     Delete a user token for the given site and user.
     """
-    check_if_site_exists(site_name)
+    check_site_access(site_name)
 
     site_user = get_site_user(site_name, user_id)
 
@@ -720,18 +723,15 @@ def create_site_channel(channel_id: str, site_name: str):
     This would ideally be called when the user creates a new channel/topic in the raven client app.
     """
 
-    site = frappe.db.exists("RC Site", site_name)
-
-    if not site:
-        frappe.throw(_("Site not registered on Raven Cloud, please ask your System Manager to register the site."))
+    check_site_access(site_name)
 
     try:
 
         # create a new channel if it doesn't exist
-        if not frappe.db.exists("RC Site Channel", {"site": site, "channel_id": channel_id}):
+        if not frappe.db.exists("RC Site Channel", {"site": site_name, "channel_id": channel_id}):
             frappe.get_doc({
                 "doctype": "RC Site Channel",
-                "site": site,
+                "site": site_name,
                 "channel_id": channel_id,
             }).insert()
 
@@ -860,7 +860,7 @@ def sync_invalid_tokens(site_name: str, batch_size: int = 10):
 
     """
     frappe.only_for("Raven Cloud User")
-    check_if_site_exists(site_name, throw=True)
+    check_site_access(site_name)
 
     # Get count first to determine has_more
     total_count = frappe.db.count("RC Invalid Tokens", filters={"site": site_name})
